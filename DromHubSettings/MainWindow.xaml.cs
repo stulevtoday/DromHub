@@ -26,6 +26,23 @@ namespace DromHubSettings
         public MainWindow()
         {
             this.InitializeComponent();
+            MainNavigationView.SelectionChanged += MainNavigationView_SelectionChanged;
+        }
+
+        private void MainNavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        {
+            // Пример: получение выбранного элемента
+            if (args.SelectedItem is NavigationViewItem selectedItem)
+            {
+                string pageTag = selectedItem.Tag.ToString();
+                // Навигация по фрейму
+                // При условии, что pageTag совпадает с именем класса страницы, например "MainPage"
+                Type pageType = Type.GetType(@"DromHubSettings.Pages." + pageTag);
+                if (pageType != null)
+                {
+                    contentFrame.Navigate(pageType);
+                }
+            }
         }
     }
 }

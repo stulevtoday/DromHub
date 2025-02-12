@@ -9,9 +9,8 @@
     mc:Ignorable="d"
     Title="DromHubSettings">
 
-	<NavigationView x:Name="nvSample" IsSettingsVisible="False" IsBackButtonVisible="Collapsed">
+	<NavigationView x:Name="MainNavigationView" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" SelectionChanged="MainNavigationView_SelectionChanged">
 		<NavigationView.MenuItems>
-			<NavigationViewItemHeader Content="Основное меню"/>
 			<NavigationViewItem Content="Главная" Icon="Home" Tag="MainPage"/>
 			<NavigationViewItem Content="Основное" Icon="Admin" Tag="SamplePage1">
 				<NavigationViewItem.MenuItems>
