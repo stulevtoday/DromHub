@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DromHubSettings (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "DromHubSettings (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
