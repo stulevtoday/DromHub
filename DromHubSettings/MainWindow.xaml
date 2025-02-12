@@ -9,7 +9,36 @@
     mc:Ignorable="d"
     Title="DromHubSettings">
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Button x:Name="myButton" Click="myButton_Click">Click Me</Button>
-    </StackPanel>
+	<NavigationView x:Name="nvSample" IsSettingsVisible="False" IsBackButtonVisible="Collapsed">
+		<NavigationView.MenuItems>
+			<NavigationViewItemHeader Content="Основное меню"/>
+			<NavigationViewItem Content="Главная" Icon="Home" Tag="MainPage"/>
+			<NavigationViewItem Content="Основное" Icon="Admin" Tag="SamplePage1">
+				<NavigationViewItem.MenuItems>
+					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>
+					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>
+				</NavigationViewItem.MenuItems>
+			</NavigationViewItem>
+			<NavigationViewItem Content="Наценки" Icon="Shop" Tag="SamplePage3">
+				<NavigationViewItem.MenuItems>
+					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>
+					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>
+				</NavigationViewItem.MenuItems>
+			</NavigationViewItem>
+			<NavigationViewItem Content="Почта" Icon="Mail" Tag="SamplePage4">
+				<NavigationViewItem.MenuItems>
+					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>
+					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>
+				</NavigationViewItem.MenuItems>
+			</NavigationViewItem>
+			<NavigationViewItem Content="Парсер" Icon="Globe" Tag="SamplePage4">
+				<NavigationViewItem.MenuItems>
+					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>
+					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>
+				</NavigationViewItem.MenuItems>
+			</NavigationViewItem>
+		</NavigationView.MenuItems>
+
+		<Frame x:Name="contentFrame"/>
+	</NavigationView>
 </Window>
