@@ -12,15 +12,9 @@
 	<NavigationView x:Name="MainNavigationView" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" SelectionChanged="MainNavigationView_SelectionChanged">
 		<NavigationView.MenuItems>
 			<NavigationViewItem Content="Главная" Icon="Home" Tag="MainPage"/>
-			<NavigationViewItem Content="Основное" Icon="Admin" Tag="SamplePage1">
-				<NavigationViewItem.MenuItems>
-					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>
-					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>
-				</NavigationViewItem.MenuItems>
-			</NavigationViewItem>
 			<NavigationViewItem Content="Наценки" Icon="Shop" Tag="SamplePage3">
 				<NavigationViewItem.MenuItems>
-					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>
+					<NavigationViewItem Content="Бренд" Tag="BrandMarkupsPage"/>
 					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>
 				</NavigationViewItem.MenuItems>
 			</NavigationViewItem>

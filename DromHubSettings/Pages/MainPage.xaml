@@ -14,23 +14,11 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock Text="Главная" 
-                   x:Name="PageHeader"
-                   Margin="36,24,36,0"
-                   Style="{StaticResource TitleTextBlockStyle}"/>
-        <ScrollViewer
-            x:Name="contentSV"
-            Grid.Row="1"
-            Padding="36,0,36,0"
-            IsTabStop="False"
-            UseSystemFocusVisuals="False"
-            VerticalScrollBarVisibility="Auto"
-            VerticalScrollMode="Auto">
+        <TextBlock Text="Главная" x:Name="PageHeader" Margin="36,24,36,0" Style="{StaticResource TitleTextBlockStyle}"/>
+        <ScrollViewer x:Name="contentSV" Grid.Row="1" Padding="36,0,36,0" IsTabStop="False" UseSystemFocusVisuals="False" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
             <StackPanel>
-                <TextBlock Text="Это приложение предназначено для управления настройками, просмотра информации и выполнения других задач, связанных с работой приложения. Здесь вы можете найти подробное описание каждой функции и инструкции по их использованию."
-                       TextWrapping="Wrap"
-                       Margin="0,24,0,20"
-                       Style="{ThemeResource BodyTextBlockStyle}"/>
+                <TextBlock TextWrapping="Wrap" Margin="0,24,0,20" Style="{ThemeResource BodyTextBlockStyle}"
+                           Text="Это приложение предназначено для управления настройками, просмотра информации и выполнения других задач, связанных с работой приложения. Здесь вы можете найти подробное описание каждой функции и инструкции по их использованию."/>
             </StackPanel>
         </ScrollViewer>
     </Grid>
