@@ -27,74 +27,71 @@ namespace DromHubSettings.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class BrandMarkupsPage : Page
+    public sealed partial class PriceRangeMarkupsPage : Page
     {
-        public MarkupPageViewModel ViewModel { get; } = new MarkupPageViewModel();
-        public BrandMarkupsPage()
+        public PriceRangeMarkupsViewModel ViewModel { get; } = new PriceRangeMarkupsViewModel();
+
+        public PriceRangeMarkupsPage()
         {
             this.InitializeComponent();
         }
 
-        // Переопределяем метод OnNavigatedTo для загрузки данных
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            await LoadBrandMarkupsAsync();
+            await LoadPriceRangeMarkupsAsync();
         }
 
-        private async Task LoadBrandMarkupsAsync()
+        private async Task LoadPriceRangeMarkupsAsync()
         {
-            // Очистка текущей коллекции (если требуется)
-            ViewModel.BrandMarkups.Clear();
-
-            // Получаем данные из БД
-            var list = await DataService.GetBrandMarkupsAsync();
-
-            // Сортировка списка по алфавиту по названию бренда
-            foreach (var item in list.OrderBy(b => b.BrandName))
+            ViewModel.PriceRangeMarkups.Clear();
+            var list = await DataService.GetPriceRangeMarkupsAsync();
+            // Сортировка по минимальной цене
+            foreach (var item in list.OrderBy(r => r.MinPrice))
             {
-                ViewModel.BrandMarkups.Add(item);
+                ViewModel.PriceRangeMarkups.Add(item);
             }
         }
 
-        // Обработчик удаления элемента
+        // Обработчик удаления диапазона
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.DataContext is BrandMarkup markup)
+            if (sender is Button button && button.DataContext is PriceRangeMarkup rangeMarkup)
             {
-                // Удаление из коллекции (и, соответственно, обновление в базе PostgreSQL)
-                ViewModel.BrandMarkups.Remove(markup);
-                await DataService.DeleteBrandMarkupAsync(markup);
+                ViewModel.PriceRangeMarkups.Remove(rangeMarkup);
+                await DataService.DeletePriceRangeMarkupAsync(rangeMarkup);
             }
         }
 
-        // Обработчик добавления нового элемента через ContentDialog
+        // Обработчик добавления нового диапазона (открытие диалога для ввода)
         private async void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new AddBrandMarkupDialog();
+            var dialog = new AddPriceRangeDialog();
             dialog.XamlRoot = this.XamlRoot;
             var result = await dialog.ShowAsync();
             if (result == ContentDialogResult.Primary)
             {
-                var newBrand = new BrandMarkup
+                var newRange = new PriceRangeMarkup
                 {
-                    Id = Guid.NewGuid(), // генерируем новый id на стороне клиента
-                    BrandName = dialog.BrandName,
+                    Id = Guid.NewGuid(), // генерируем уникальный идентификатор в программе
+                    MinPrice = dialog.MinPrice,
+                    MaxPrice = dialog.MaxPrice,
                     Markup = dialog.Markup
                 };
-                ViewModel.BrandMarkups.Add(newBrand);
-                await DataService.AddBrandMarkupAsync(newBrand);
+                ViewModel.PriceRangeMarkups.Add(newRange);
+                await DataService.AddPriceRangeMarkupAsync(newRange);
+                await LoadPriceRangeMarkupsAsync();
             }
         }
 
-        // Обновление записи в базе при изменении значения наценки
+        // Обновление записи в базе при изменении любого из значений диапазона
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 // Предположим, что у вас есть DataService для работы с базой данных.
                 // Например, DataService.UpdateBrandMarkupsAsync принимает коллекцию обновлённых данных.
-                await DataService.SaveBrandMarkupsAsync(ViewModel.BrandMarkups);
+                await DataService.SavePriceRangeMarkupsAsync(ViewModel.PriceRangeMarkups);
 
                 var successDialog = new ContentDialog
                 {
@@ -119,8 +116,8 @@ namespace DromHubSettings.Pages
         }
     }
 
-    public class MarkupPageViewModel
+    public class PriceRangeMarkupsViewModel
     {
-        public ObservableCollection<BrandMarkup> BrandMarkups { get; set; } = new ObservableCollection<BrandMarkup>();
+        public ObservableCollection<PriceRangeMarkup> PriceRangeMarkups { get; set; } = new ObservableCollection<PriceRangeMarkup>();
     }
 }

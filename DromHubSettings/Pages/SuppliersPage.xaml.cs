@@ -12,12 +12,12 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using DromHubSettings.Models;
-using DromHubSettings.Dialogs;
 using System.Collections.ObjectModel;
 using DromHubSettings.Models;
-using System.Threading.Tasks;
 using DromHubSettings.Serviсes;
+using System.Threading.Tasks;
+using DromHubSettings.Dialogs;
+using System.Diagnostics;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -27,74 +27,69 @@ namespace DromHubSettings.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class BrandMarkupsPage : Page
+    public sealed partial class SuppliersPage : Page
     {
-        public MarkupPageViewModel ViewModel { get; } = new MarkupPageViewModel();
-        public BrandMarkupsPage()
+        public SuppliersViewModel ViewModel { get; } = new SuppliersViewModel();
+        public SuppliersPage()
         {
             this.InitializeComponent();
         }
 
-        // Переопределяем метод OnNavigatedTo для загрузки данных
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            await LoadBrandMarkupsAsync();
+            await LoadSuppliersAsync();
         }
 
-        private async Task LoadBrandMarkupsAsync()
+        // Если требуется, можно добавить метод для загрузки поставщиков из БД.
+        public async Task LoadSuppliersAsync()
         {
-            // Очистка текущей коллекции (если требуется)
-            ViewModel.BrandMarkups.Clear();
-
-            // Получаем данные из БД
-            var list = await DataService.GetBrandMarkupsAsync();
-
-            // Сортировка списка по алфавиту по названию бренда
-            foreach (var item in list.OrderBy(b => b.BrandName))
+            var suppliers = await DataService.GetSuppliersAsync();
+            ViewModel.Suppliers.Clear();
+            foreach (var supplier in suppliers.OrderBy(b => b.Index))
             {
-                ViewModel.BrandMarkups.Add(item);
+                ViewModel.Suppliers.Add(supplier);
             }
         }
 
-        // Обработчик удаления элемента
-        private async void DeleteButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && button.DataContext is BrandMarkup markup)
-            {
-                // Удаление из коллекции (и, соответственно, обновление в базе PostgreSQL)
-                ViewModel.BrandMarkups.Remove(markup);
-                await DataService.DeleteBrandMarkupAsync(markup);
-            }
-        }
-
-        // Обработчик добавления нового элемента через ContentDialog
         private async void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new AddBrandMarkupDialog();
+            var dialog = new AddSupplierDialog();
             dialog.XamlRoot = this.XamlRoot;
             var result = await dialog.ShowAsync();
             if (result == ContentDialogResult.Primary)
             {
-                var newBrand = new BrandMarkup
+                var newSupplier = new Supplier
                 {
-                    Id = Guid.NewGuid(), // генерируем новый id на стороне клиента
-                    BrandName = dialog.BrandName,
-                    Markup = dialog.Markup
+                    Id = Guid.NewGuid(),
+                    Name = dialog.SupplierName,
+                    Email = dialog.SupplierEmail,
+                    LocalityName = dialog.SupplierLocality,
+                    Index = ViewModel.Suppliers.Count
                 };
-                ViewModel.BrandMarkups.Add(newBrand);
-                await DataService.AddBrandMarkupAsync(newBrand);
+
+                await DataService.AddSupplierAsync(newSupplier);
+                ViewModel.Suppliers.Add(newSupplier);
             }
         }
 
-        // Обновление записи в базе при изменении значения наценки
+        private async void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.DataContext is Supplier supplier)
+            {
+                ViewModel.Suppliers.Remove(supplier);
+                await DataService.DeleteSupplierAsync(supplier);
+            }
+        }
+
+        // Обновление записи в базе
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 // Предположим, что у вас есть DataService для работы с базой данных.
                 // Например, DataService.UpdateBrandMarkupsAsync принимает коллекцию обновлённых данных.
-                await DataService.SaveBrandMarkupsAsync(ViewModel.BrandMarkups);
+                await DataService.SaveSuppliersAsync(ViewModel.Suppliers);
 
                 var successDialog = new ContentDialog
                 {
@@ -119,8 +114,8 @@ namespace DromHubSettings.Pages
         }
     }
 
-    public class MarkupPageViewModel
+    public class SuppliersViewModel
     {
-        public ObservableCollection<BrandMarkup> BrandMarkups { get; set; } = new ObservableCollection<BrandMarkup>();
+        public ObservableCollection<Supplier> Suppliers { get; } = new ObservableCollection<Supplier>();
     }
 }

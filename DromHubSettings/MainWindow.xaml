@@ -14,10 +14,12 @@
 			<NavigationViewItem Content="Главная" Icon="Home" Tag="MainPage"/>
 			<NavigationViewItem Content="Наценки" Icon="Shop" Tag="SamplePage3">
 				<NavigationViewItem.MenuItems>
+                    <NavigationViewItem Content="Диапазон цен" Tag="PriceRangeMarkupsPage"/>
 					<NavigationViewItem Content="Бренд" Tag="BrandMarkupsPage"/>
 					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>
 				</NavigationViewItem.MenuItems>
 			</NavigationViewItem>
+            <NavigationViewItem Content="Поставщики" Icon="People" Tag="SuppliersPage"/>
 			<NavigationViewItem Content="Почта" Icon="Mail" Tag="SamplePage4">
 				<NavigationViewItem.MenuItems>
 					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>

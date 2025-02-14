@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="DromHubSettings.Dialogs.AddPriceRangeDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DromHubSettings.Dialogs"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Добавить новый диапазон цен"
+    PrimaryButtonText="Добавить"
+    SecondaryButtonText="Отмена"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    RequestedTheme="Light">
+
+    <StackPanel Spacing="12">
+        <TextBlock Text="Минимальная цена:"/>
+        <NumberBox x:Name="MinPriceNumberBox"
+                   PlaceholderText="Введите минимальную цену"
+                   Minimum="0"
+                   SmallChange="1"
+                   LargeChange="10"
+                   Value="0"/>
+
+        <TextBlock Text="Максимальная цена:"/>
+        <NumberBox x:Name="MaxPriceNumberBox"
+                   PlaceholderText="Введите максимальную цену"
+                   Minimum="0"
+                   SmallChange="1"
+                   LargeChange="10"
+                   Value="0"/>
+
+        <TextBlock Text="Наценка (%):"/>
+        <NumberBox x:Name="MarkupNumberBox"
+                   PlaceholderText="Введите процент наценки"
+                   Minimum="0"
+                   Maximum="1000"
+                   SmallChange="1"
+                   LargeChange="10"
+                   Value="0"/>
+    </StackPanel>
+</ContentDialog>

@@ -1,0 +1,21 @@
+<ContentDialog
+    x:Class="DromHubSettings.Dialogs.AddSupplierDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Добавить поставщика"
+    PrimaryButtonText="Добавить"
+    SecondaryButtonText="Отмена"
+    RequestedTheme="Light">
+    <StackPanel Spacing="12">
+        <TextBox x:Name="NameTextBox"
+                 Header="Название"
+                 PlaceholderText="Введите название поставщика"/>
+        <TextBox x:Name="EmailTextBox"
+                 Header="Почта"
+                 PlaceholderText="Введите почту"/>
+        <TextBox x:Name="LocalityTextBox"
+                 Header="Локальность"
+                 PlaceholderText="Введите локальность"/>
+        
+    </StackPanel>
+</ContentDialog>

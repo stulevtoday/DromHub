@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DromHubSettings.Models
 {
     public class BrandMarkup
     {
+        public Guid Id { get; set; } // уникальный идентификатор, генерируется в программе
         public string BrandName { get; set; }
         public double Markup { get; set; }
     }
