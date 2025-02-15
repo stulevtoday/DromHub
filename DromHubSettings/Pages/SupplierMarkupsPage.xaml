@@ -1,0 +1,103 @@
+<Page
+    x:Class="DromHubSettings.Pages.SupplierMarkupsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DromHubSettings.Pages"
+    xmlns:models="using:DromHubSettings.Models"
+    xmlns:dialogs="using:DromHubSettings.Dialogs"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- (0) Заголовок и описание -->
+            <RowDefinition Height="Auto"/>
+            <!-- (1) Шапка столбцов -->
+            <RowDefinition Height="Auto"/>
+            <!-- (2) Список поставщиков -->
+            <RowDefinition Height="*"/>
+            <!-- (3) Кнопка сохранения -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- (0) Заголовок и описание страницы -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Наценки для поставщиков"
+                       Style="{StaticResource TitleTextBlockStyle}"
+                       Margin="36,24,36,0"/>
+            <TextBlock Text="Редактируйте коэфициент наценки для каждого поставщика. Базовое значение – 1,25."
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Margin="36,8,36,16"/>
+        </StackPanel>
+
+        <!-- (1) Шапка столбцов -->
+        <Grid Grid.Row="1" 
+              Margin="48,0,48,8" 
+              Padding="8" 
+              ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <!-- Поставщик -->
+                <ColumnDefinition Width="1.5*"/>
+                <!-- Наценка -->
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Поставщик"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Grid.Column="1"
+                       Text="Коэфициент наценки (1,xx)"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"/>
+        </Grid>
+
+        <!-- (2) Список поставщиков -->
+        <ListView Grid.Row="2"
+                  x:Name="SupplierMarkupsListView"
+                  Margin="36,0,36,0"
+                  ItemsSource="{x:Bind ViewModel.SupplierMarkups, Mode=OneWay}"
+                  SelectionMode="None"
+                  HorizontalContentAlignment="Stretch">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="models:SupplierMarkup">
+                    <Border Background="{ThemeResource SystemControlBackgroundAltMediumBrush}"
+                            CornerRadius="4"
+                            Margin="0,0,0,8">
+                        <Grid Padding="8" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="3*"/>
+                                <ColumnDefinition Width="1.5*"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- Название поставщика, не редактируется -->
+                            <TextBox Grid.Column="0"
+                                     Text="{x:Bind SupplierName, Mode=TwoWay}"
+                                     IsReadOnly="True"
+                                     PlaceholderText="Поставщик"
+                                     VerticalAlignment="Center"/>
+                            <!-- Наценка, редактируемая -->
+                            <NumberBox Grid.Column="1"
+                                       Value="{x:Bind Markup, Mode=TwoWay}"
+                                       Minimum="0"
+                                       Maximum="10"
+                                       SmallChange="0.01"
+                                       LargeChange="0.05"
+                                       PlaceholderText="Коэфициент наценки"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Stretch"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- (3) Кнопка сохранения -->
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,16,16"
+                    Spacing="12">
+            <Button Content="Сохранить изменения" Click="SaveButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Page>

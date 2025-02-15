@@ -1,63 +1,51 @@
 <Page
-    x:Class="DromHubSettings.Pages.BrandMarkupsPage"
+    x:Class="DromHubSettings.Pages.LocalitiesPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:DromHubSettings.Pages"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:converters="using:DromHubSettings.Converters"
     xmlns:models="using:DromHubSettings.Models"
     xmlns:dialogs="using:DromHubSettings.Dialogs"
-    mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
-    <Page.Resources>
-        <converters:UpperCaseConverter x:Key="UpperCaseConverter"/>
-    </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <!-- (0) Заголовок и описание -->
+            <!-- (0) Заголовок и описание страницы -->
             <RowDefinition Height="Auto"/>
-            <!-- (1) Шапка столбцов -->
+            <!-- (1) Шапка таблицы -->
             <RowDefinition Height="Auto"/>
-            <!-- (2) Список брендов -->
+            <!-- (2) Список локальностей -->
             <RowDefinition Height="*"/>
-            <!-- (3) Кнопки внизу -->
+            <!-- (3) Кнопки внизу страницы -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- (0) Заголовочная область -->
+        <!-- (0) Заголовок и описание -->
         <StackPanel Grid.Row="0">
-            <TextBlock x:Name="PageHeader"
-                       Text="Наценки по бренду"
+            <TextBlock Text="Локальности" 
                        Margin="36,24,36,0"
                        Style="{StaticResource TitleTextBlockStyle}"/>
-            <TextBlock x:Name="PageDescription"
+            <TextBlock Text="Управляйте списком локальностей и сроками доставки."
                        Margin="36,8,36,16"
-                       Style="{ThemeResource BodyTextBlockStyle}"
-                       Text="На этой странице вы можете управлять коэфициентом наценки для брендов. Здесь для каждого бренда можно задать или изменить наценку, удалить элемент."/>
+                       Style="{ThemeResource BodyTextBlockStyle}"/>
         </StackPanel>
 
         <!-- (1) Шапка столбцов -->
-        <Grid Grid.Row="1"
-              Margin="48,0,48,8"
-              Padding="8"
-              ColumnSpacing="24">
+        <Grid Grid.Row="1" Margin="48,0,48,8" Padding="8" ColumnSpacing="24">
             <Grid.ColumnDefinitions>
-                <!-- Столбцы: BrandName (шире), Markup, Кнопка удаления -->
-                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="2*"/>
+                <!-- Название -->
                 <ColumnDefinition Width="*"/>
+                <!-- Срок доставки -->
                 <ColumnDefinition Width="0.4*"/>
+                <!-- Удалить -->
             </Grid.ColumnDefinitions>
-
             <TextBlock Grid.Column="0"
-                       Text="Бренд"
+                       Text="Название"
                        Style="{StaticResource BodyStrongTextBlockStyle}"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"/>
             <TextBlock Grid.Column="1"
-                       Text="Коэфициент наценки (1,xx)"
+                       Text="Срок доставки (дней)"
                        Style="{StaticResource BodyStrongTextBlockStyle}"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"/>
@@ -68,44 +56,42 @@
                        HorizontalAlignment="Center"/>
         </Grid>
 
-        <!-- (2) Список брендов (ListView) -->
+        <!-- (2) Список локальностей -->
         <ListView Grid.Row="2"
-                  x:Name="BrandListView"
+                  x:Name="LocalitiesListView"
                   Margin="36,0,36,0"
-                  ItemsSource="{x:Bind ViewModel.BrandMarkups, Mode=OneWay}"
+                  ItemsSource="{x:Bind ViewModel.Localities, Mode=OneWay}"
                   SelectionMode="None"
                   HorizontalContentAlignment="Stretch">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="models:BrandMarkup">
-                    <!-- Оборачиваем элемент в Border для визуального разделения -->
+                <DataTemplate x:DataType="models:LocalityOption">
                     <Border Background="{ThemeResource SystemControlBackgroundAltMediumBrush}"
                             CornerRadius="4"
                             Margin="0,0,0,8">
                         <Grid Padding="8" ColumnSpacing="16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="4*"/>
+                                <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="0.4*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Бренд (преобразуем в верхний регистр конвертером, убрали Header) -->
+                            <!-- Название локальности -->
                             <TextBox Grid.Column="0"
-                                     Text="{x:Bind BrandName, Mode=TwoWay, Converter={StaticResource UpperCaseConverter}}"
-                                     PlaceholderText="Введите название бренда"
+                                     Text="{x:Bind Name, Mode=TwoWay}"
+                                     PlaceholderText="Введите название"
                                      VerticalAlignment="Center"/>
 
-                            <!-- Наценка (убрали Header) -->
+                            <!-- Срок доставки (в днях) -->
                             <NumberBox Grid.Column="1"
-                                       Value="{x:Bind Markup, Mode=TwoWay}"
-                                       Minimum="1"
-                                       Maximum="10"
-                                       SmallChange="0.01"
-                                       LargeChange="0.05"
-                                       PlaceholderText="Коэфициент наценки"
+                                       Value="{x:Bind DeliveryTime, Mode=TwoWay}"
+                                       Minimum="0"
+                                       SmallChange="1"
+                                       LargeChange="1"
+                                       PlaceholderText="Срок доставки"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Stretch"/>
 
-                            <!-- Кнопка удаления элемента -->
+                            <!-- Кнопка удаления локальности -->
                             <Button Grid.Column="2"
                                     VerticalAlignment="Center"
                                     HorizontalAlignment="Center"
@@ -118,13 +104,9 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <!-- (3) Кнопки внизу страницы -->
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,16,16,16"
-                    Spacing="12">
-            <Button Content="Добавить новый бренд" Click="AddButton_Click"/>
+        <!-- (3) Кнопки добавления/сохранения -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,16,16" Spacing="12">
+            <Button Content="Добавить локальность" Click="AddButton_Click"/>
             <Button Content="Сохранить изменения" Click="SaveButton_Click"/>
         </StackPanel>
     </Grid>

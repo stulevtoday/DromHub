@@ -1,0 +1,22 @@
+<ContentDialog
+    x:Class="DromHubSettings.Dialogs.AddLocalityDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Добавить локальность"
+    PrimaryButtonText="Добавить"
+    SecondaryButtonText="Отмена"
+    RequestedTheme="Light"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
+    <StackPanel Spacing="12">
+        <TextBox x:Name="LocalityNameTextBox"
+                 Header="Название"
+                 PlaceholderText="Введите название локальности"/>
+        <NumberBox x:Name="DeliveryTimeNumberBox"
+                   Header="Срок доставки (дней)"
+                   PlaceholderText="Введите срок доставки"
+                   Minimum="0"
+                   SmallChange="1"
+                   LargeChange="1"
+                   Value="0"/>
+    </StackPanel>
+</ContentDialog>

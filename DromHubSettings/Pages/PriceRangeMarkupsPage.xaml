@@ -31,7 +31,7 @@
             <TextBlock x:Name="PageDescription"
                        Margin="36,8,36,16"
                        Style="{ThemeResource BodyTextBlockStyle}"
-                       Text="На этой странице вы можете управлять наценками для различных диапазонов цен. Для каждого диапазона укажите минимальное и максимальное значение цен, а также процент наценки."/>
+                       Text="На этой странице вы можете управлять коэфициентом наценки для различных диапазонов цен. Для каждого диапазона укажите минимальное и максимальное значение цен, а также процент наценки."/>
         </StackPanel>
 
         <!-- (1) Шапка столбцов -->
@@ -80,7 +80,7 @@
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
             <TextBlock Grid.Column="4"
-                       Text="Наценка (%)"
+                       Text="Коэфициент наценки (1,xx)"
                        Style="{StaticResource BodyStrongTextBlockStyle}"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
@@ -158,11 +158,11 @@
                             <!-- Поле ввода наценки -->
                             <NumberBox Grid.Column="4"
                                        Value="{x:Bind Markup, Mode=TwoWay}"
-                                       Minimum="100"
-                                       Maximum="1000"
-                                       SmallChange="1"
-                                       LargeChange="10"
-                                       PlaceholderText="Наценка (%)"
+                                       Minimum="1"
+                                       Maximum="10"
+                                       SmallChange="0.01"
+                                       LargeChange="0.05"
+                                       PlaceholderText="Коэфициент наценки"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Stretch"/>
 

@@ -4,8 +4,9 @@ namespace DromHubSettings.Models
 {
     public class SupplierMarkup
     {
-        public Guid Id { get; set; }
+        public Guid SupplierId { get; set; }
+        public double Markup { get; set; }
+        // Это поле не хранится в таблице supplier_markups, но получаем через JOIN
         public string SupplierName { get; set; }
-        public double Markup { get; set; } = 125; // базовое значение 125%
     }
 }

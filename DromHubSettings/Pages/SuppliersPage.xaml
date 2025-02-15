@@ -1,5 +1,7 @@
 <Page
     x:Class="DromHubSettings.Pages.SuppliersPage"
+    x:Name="pageRoot"
+    DataContext="{x:Bind ViewModel}"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:DromHubSettings.Pages"
@@ -39,14 +41,16 @@
               ColumnSpacing="24">
             <Grid.ColumnDefinitions>
                 <!-- Те же самые столбцы, что в ItemTemplate -->
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1.5*"/>
                 <!-- Название -->
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1.5*"/>
                 <!-- Почта -->
                 <ColumnDefinition Width="*"/>
                 <!-- Локальность -->
                 <ColumnDefinition Width="0.4*"/>
                 <!-- Индекс -->
+                <ColumnDefinition Width="0.4*"/>
+                <!-- Под кнопку отключения -->
                 <ColumnDefinition Width="0.4*"/>
                 <!-- Под кнопку удаления -->
             </Grid.ColumnDefinitions>
@@ -73,6 +77,11 @@
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"/>
             <TextBlock Grid.Column="4"
+                       Text="Статус"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Grid.Column="5"
                        Text="Удалить"
                        Style="{StaticResource BodyStrongTextBlockStyle}"
                        VerticalAlignment="Center"
@@ -95,11 +104,12 @@
                         <Grid Padding="8" ColumnSpacing="16">
                             <Grid.ColumnDefinitions>
                                 <!-- Та же самая сетка, что в шапке -->
-                                <ColumnDefinition Width="2*"/>
-                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="1.5*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="0.4*"/>
                                 <!-- Индекс -->
+                                <ColumnDefinition Width="0.4*"/>
                                 <ColumnDefinition Width="0.4*"/>
                             </Grid.ColumnDefinitions>
 
@@ -118,8 +128,10 @@
                             <!-- Локальность -->
                             <TextBox Grid.Column="2"
                                      Text="{x:Bind LocalityName, Mode=TwoWay}"
+                                     IsReadOnly="True"
                                      PlaceholderText="Введите локальность"
                                      VerticalAlignment="Center"/>
+
 
                             <!-- Индекс -->
                             <NumberBox Grid.Column="3"
@@ -131,13 +143,18 @@
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Stretch"/>
 
+                            <ToggleSwitch Grid.Column="4"
+                                          IsOn="{x:Bind IsActive, Mode=TwoWay}"/>
+
                             <!-- Кнопка удаления -->
-                            <Button Grid.Column="4"
+                            <Button Grid.Column="5"
                                     VerticalAlignment="Center"
                                     HorizontalAlignment="Center"
                                     Click="DeleteButton_Click">
                                 <SymbolIcon Symbol="Delete"/>
                             </Button>
+
+                            
                         </Grid>
                     </Border>
                 </DataTemplate>

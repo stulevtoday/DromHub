@@ -12,12 +12,11 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using System.Collections.ObjectModel;
 using DromHubSettings.Models;
 using DromHubSettings.Serviсes;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using DromHubSettings.Dialogs;
-using System.Diagnostics;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -27,71 +26,58 @@ namespace DromHubSettings.Pages
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class SuppliersPage : Page
+    public sealed partial class LocalitiesPage : Page
     {
-        public SuppliersViewModel ViewModel { get; } = new SuppliersViewModel();
-        public SuppliersPage()
+        public LocalitiesViewModel ViewModel { get; } = new LocalitiesViewModel();
+
+        public LocalitiesPage()
         {
             this.InitializeComponent();
+            this.DataContext = ViewModel;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            await LoadSuppliersAsync();
-        }
-
-        public async Task LoadSuppliersAsync()
-        {
-            var suppliers = await DataService.GetSuppliersAsync();
-            ViewModel.Suppliers.Clear();
-            foreach (var supplier in suppliers.OrderBy(b => b.Index))
-            {
-                ViewModel.Suppliers.Add(supplier);
-            }
+            await ViewModel.LoadLocalitiesAsync();
         }
 
         private async void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new AddSupplierDialog();
+            var dialog = new AddLocalityDialog();
             dialog.XamlRoot = this.XamlRoot;
             var result = await dialog.ShowAsync();
             if (result == ContentDialogResult.Primary)
             {
-                var newSupplier = new Supplier
+                var newLocality = new Models.LocalityOption
                 {
-                    Id = Guid.NewGuid(),
-                    Name = dialog.SupplierName,
-                    Email = dialog.SupplierEmail,
-                    LocalityId = dialog.SelectedLocalityId,  // выбираем id локальности
-                    Index = dialog.SupplierIndex
+                    Id = System.Guid.NewGuid(),
+                    Name = dialog.LocalityName,
+                    DeliveryTime = dialog.DeliveryTime
                 };
 
-                await DataService.AddSupplierAsync(newSupplier);
-                ViewModel.Suppliers.Add(newSupplier);
+                await DataService.AddLocalityAsync(newLocality);
+                ViewModel.Localities.Add(newLocality);
             }
-            this.Frame.Navigate(typeof(SuppliersPage));
         }
-
 
 
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.DataContext is Supplier supplier)
+            if (sender is Button button && button.DataContext is Models.LocalityOption locality)
             {
-                ViewModel.Suppliers.Remove(supplier);
-                await DataService.DeleteSupplierAsync(supplier);
+                ViewModel.Localities.Remove(locality);
+                await DataService.DeleteLocalityAsync(locality);
             }
         }
 
-        // Обновление записи в базе
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 // Предположим, что у вас есть DataService для работы с базой данных.
                 // Например, DataService.UpdateBrandMarkupsAsync принимает коллекцию обновлённых данных.
-                await DataService.SaveSuppliersAsync(ViewModel.Suppliers);
+                await DataService.SaveLocalitiesAsync(ViewModel.Localities);
 
                 var successDialog = new ContentDialog
                 {
@@ -116,8 +102,18 @@ namespace DromHubSettings.Pages
         }
     }
 
-    public class SuppliersViewModel
+    public class LocalitiesViewModel
     {
-        public ObservableCollection<Supplier> Suppliers { get; } = new ObservableCollection<Supplier>();
+        public ObservableCollection<LocalityOption> Localities { get; } = new ObservableCollection<LocalityOption>();
+
+        public async Task LoadLocalitiesAsync()
+        {
+            var localities = await DataService.GetLocalityOptionsAsync();
+            Localities.Clear();
+            foreach (var loc in localities)
+            {
+                Localities.Add(loc);
+            }
+        }
     }
 }

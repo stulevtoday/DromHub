@@ -186,7 +186,18 @@ namespace DromHubSettings.Serviсes
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
 
-            var sql = "SELECT id, name, email, locality_name, index FROM suppliers";
+            // Обновляем запрос: выбираем locality_id вместо locality_name
+            var sql = @"
+                SELECT 
+                    s.id,
+                    s.name,
+                    s.email,
+                    s.locality_id,
+                    l.name as locality_name,
+                    s.index,
+                    s.is_active
+                FROM suppliers s
+                JOIN localities l ON s.locality_id = l.id";
             using var command = new NpgsqlCommand(sql, connection);
             using var reader = await command.ExecuteReaderAsync();
 
@@ -195,37 +206,88 @@ namespace DromHubSettings.Serviсes
                 var id = reader.GetGuid(reader.GetOrdinal("id"));
                 var name = reader.GetString(reader.GetOrdinal("name"));
                 var email = reader.GetString(reader.GetOrdinal("email"));
-                var localityName = reader.GetString(reader.GetOrdinal("locality_name"));
+                var localityId = reader.GetGuid(reader.GetOrdinal("locality_id")); // теперь читаем id
+                var localityName = reader.GetString(reader.GetOrdinal("locality_name")); // теперь читаем id
                 var index = reader.GetInt32(reader.GetOrdinal("index"));
+                var isActive = reader.GetBoolean(reader.GetOrdinal("is_active"));
 
                 suppliers.Add(new Supplier
                 {
                     Id = id,
                     Name = name,
                     Email = email,
+                    LocalityId = localityId,  // присваиваем значение id локальности
                     LocalityName = localityName,
-                    Index = index
+                    Index = index,
+                    IsActive = isActive
                 });
             }
 
             return suppliers;
         }
 
+
+
         public static async Task AddSupplierAsync(Supplier supplier)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
 
-            var sql = "INSERT INTO suppliers (id, name, email, locality_name, index) " +
-                      "VALUES (@id, @name, @email, @localityName, @index)";
-            using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("id", supplier.Id);
-            command.Parameters.AddWithValue("name", supplier.Name);
-            command.Parameters.AddWithValue("email", supplier.Email);
-            command.Parameters.AddWithValue("localityName", supplier.LocalityName);
-            command.Parameters.AddWithValue("index", supplier.Index);
-            await command.ExecuteNonQueryAsync();
+            using var transaction = await connection.BeginTransactionAsync();
+
+            try
+            {
+                // 1. Добавляем запись в suppliers
+                var sqlSupplier = @"
+                    INSERT INTO suppliers (id, name, email, locality_id, index, is_active)
+                    VALUES (@id, @name, @email, @localityId, @index, @isActive)";
+                using (var command = new NpgsqlCommand(sqlSupplier, connection, transaction))
+                {
+                    command.Parameters.AddWithValue("id", supplier.Id);
+                    command.Parameters.AddWithValue("name", supplier.Name);
+                    command.Parameters.AddWithValue("email", supplier.Email);
+                    command.Parameters.AddWithValue("localityId", supplier.LocalityId);
+                    command.Parameters.AddWithValue("index", supplier.Index);
+                    command.Parameters.AddWithValue("isActive", supplier.IsActive);
+                    await command.ExecuteNonQueryAsync();
+                }
+
+                // 2. Создаём запись в supplier_markups (без имени)
+                var sqlMarkup = @"
+                    INSERT INTO supplier_markups (supplier_id, markup)
+                    VALUES (@supplierId, @markup)";
+                using (var cmdMarkup = new NpgsqlCommand(sqlMarkup, connection, transaction))
+                {
+                    cmdMarkup.Parameters.AddWithValue("supplierId", supplier.Id);
+                    cmdMarkup.Parameters.AddWithValue("markup", 1.25); // базовое значение, к примеру 125%
+                    await cmdMarkup.ExecuteNonQueryAsync();
+                }
+
+                // 3. Вставляем запись разметки для поставщика
+                var sqlMapping = @"
+                    INSERT INTO supplier_excel_mappings (supplier_id, column_product_name, column_brand, column_catalog_name, column_quantity, column_price, column_multiple)
+                    VALUES (@supplierId, @columnProductName, @columnBrand, @columnCatalogName, @columnQuantity, @columnPrice, @columnMultiple)";
+                using (var cmdMapping = new NpgsqlCommand(sqlMapping, connection, transaction))
+                {
+                    cmdMapping.Parameters.AddWithValue("supplierId", supplier.Id);
+                    cmdMapping.Parameters.AddWithValue("columnProductName", 1);
+                    cmdMapping.Parameters.AddWithValue("columnBrand", 2);
+                    cmdMapping.Parameters.AddWithValue("columnCatalogName", 3);
+                    cmdMapping.Parameters.AddWithValue("columnQuantity", 4);
+                    cmdMapping.Parameters.AddWithValue("columnPrice", 5);
+                    cmdMapping.Parameters.AddWithValue("columnMultiple", 0);
+                    await cmdMapping.ExecuteNonQueryAsync();
+                }
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
+
 
         public static async Task SaveSuppliersAsync(IEnumerable<Supplier> suppliers)
         {
@@ -235,21 +297,30 @@ namespace DromHubSettings.Serviсes
             // Начинаем транзакцию, чтобы сохранить все изменения атомарно
             using var transaction = await connection.BeginTransactionAsync();
 
-            var sql = "UPDATE suppliers SET name = @name, email = @email, locality_name = @localityName, index = @index WHERE id = @id";
+            
+
+            var sql = @"
+                UPDATE suppliers
+                SET name = @name,
+                    email = @email,
+                    locality_id = @localityId,
+                    index = @index,
+                    is_active = @isActive
+                WHERE id = @id";
 
             foreach (var s in suppliers)
             {
-                using var command = new NpgsqlCommand(sql, connection, transaction);
+                Debug.WriteLine(s.LocalityId);
+                using var command = new NpgsqlCommand(sql, connection);
+                command.Parameters.AddWithValue("id", s.Id);
                 command.Parameters.AddWithValue("name", s.Name);
                 command.Parameters.AddWithValue("email", s.Email);
-                command.Parameters.AddWithValue("localityName", s.LocalityName);
+                command.Parameters.AddWithValue("localityId", s.LocalityId);
                 command.Parameters.AddWithValue("index", s.Index);
-                command.Parameters.AddWithValue("id", s.Id);
+                command.Parameters.AddWithValue("isActive", s.IsActive);
 
                 await command.ExecuteNonQueryAsync();
             }
-
-            await transaction.CommitAsync();
         }
 
 
@@ -258,9 +329,272 @@ namespace DromHubSettings.Serviсes
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
 
-            var sql = "DELETE FROM suppliers WHERE id = @id";
+            using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                // Удаляем запись из suppliers
+                var sqlDeleteSupplier = "DELETE FROM suppliers WHERE id = @id";
+                using (var cmdSupplier = new NpgsqlCommand(sqlDeleteSupplier, connection, transaction))
+                {
+                    cmdSupplier.Parameters.AddWithValue("id", supplier.Id);
+                    await cmdSupplier.ExecuteNonQueryAsync();
+                }
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public static async Task DisableSupplierAsync(Supplier supplier)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sql = "UPDATE suppliers SET is_active = false WHERE id = @id";
             using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("id", supplier.Id);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public static async Task UpdateSupplierAsync(Supplier supplier)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sql = @"
+                UPDATE suppliers
+                SET name = @name,
+                    email = @email,
+                    locality_id = @localityId,
+                    index = @index,
+                    is_active = @isActive
+                WHERE id = @id";
+
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("id", supplier.Id);
+            command.Parameters.AddWithValue("name", supplier.Name);
+            command.Parameters.AddWithValue("email", supplier.Email);
+            command.Parameters.AddWithValue("localityId", supplier.LocalityId);  // Используем новое поле
+            command.Parameters.AddWithValue("index", supplier.Index);
+            command.Parameters.AddWithValue("isActive", supplier.IsActive);
+            await command.ExecuteNonQueryAsync();
+        }
+
+
+
+
+
+        // Получение списка наценок поставщиков
+        public static async Task<List<SupplierMarkup>> GetSupplierMarkupsAsync()
+        {
+            var list = new List<SupplierMarkup>();
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            // Запрос с JOIN для получения имени поставщика
+            var sql = @"
+                SELECT 
+                    sm.supplier_id,
+                    s.name AS supplier_name,
+                    sm.markup
+                FROM supplier_markups sm
+                JOIN suppliers s ON sm.supplier_id = s.id";
+
+            using var command = new NpgsqlCommand(sql, connection);
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                var supplierId = reader.GetGuid(reader.GetOrdinal("supplier_id"));
+                var supplierName = reader.GetString(reader.GetOrdinal("supplier_name"));
+                var markup = reader.GetDouble(reader.GetOrdinal("markup"));
+
+                list.Add(new SupplierMarkup
+                {
+                    SupplierId = supplierId,
+                    SupplierName = supplierName,
+                    Markup = markup
+                });
+            }
+
+            return list;
+        }
+
+
+
+        // Сохранение (обновление) наценок для всех поставщиков в транзакции
+        public static async Task SaveSupplierMarkupsAsync(IEnumerable<SupplierMarkup> supplierMarkups)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+            using var transaction = await connection.BeginTransactionAsync();
+
+            // Обновляем запись по supplier_id
+            var sql = "UPDATE supplier_markups SET markup = @markup WHERE supplier_id = @supplierId";
+
+            foreach (var sm in supplierMarkups)
+            {
+                using var command = new NpgsqlCommand(sql, connection, transaction);
+                command.Parameters.AddWithValue("markup", sm.Markup);
+                command.Parameters.AddWithValue("supplierId", sm.SupplierId);
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
+
+
+        public static async Task<List<SupplierExcelMapping>> GetSupplierExcelMappingsAsync()
+        {
+            var list = new List<SupplierExcelMapping>();
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sql = @"
+                SELECT 
+                    sem.supplier_id,
+                    sem.column_product_name,
+                    sem.column_brand,
+                    sem.column_catalog_name,
+                    sem.column_quantity,
+                    sem.column_price,
+                    sem.column_multiple,
+                    s.name AS supplier_name
+                FROM supplier_excel_mappings sem
+                JOIN suppliers s ON sem.supplier_id = s.id";
+
+            using var command = new NpgsqlCommand(sql, connection);
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                list.Add(new SupplierExcelMapping
+                {
+                    SupplierId = reader.GetGuid(reader.GetOrdinal("supplier_id")),
+                    ColumnProductName = reader.GetInt32(reader.GetOrdinal("column_product_name")),
+                    ColumnBrand = reader.GetInt32(reader.GetOrdinal("column_brand")),
+                    ColumnCatalogName = reader.GetInt32(reader.GetOrdinal("column_catalog_name")),
+                    ColumnQuantity = reader.GetInt32(reader.GetOrdinal("column_quantity")),
+                    ColumnPrice = reader.GetInt32(reader.GetOrdinal("column_price")),
+                    ColumnMultiple = reader.GetInt32(reader.GetOrdinal("column_multiple")),
+                    SupplierName = reader.GetString(reader.GetOrdinal("supplier_name"))
+                });
+            }
+
+            return list;
+        }
+
+
+        public static async Task SaveSupplierExcelMappingsAsync(IEnumerable<SupplierExcelMapping> mappings)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+            using var transaction = await connection.BeginTransactionAsync();
+
+            var sql = @"
+                UPDATE supplier_excel_mappings 
+                SET column_product_name = @columnProductName,
+                    column_brand = @columnBrand,
+                    column_catalog_name = @columnCatalogName,
+                    column_quantity = @columnQuantity,
+                    column_price = @columnPrice,
+                    column_multiple = @columnMultiple
+                WHERE supplier_id = @supplierId";
+
+            foreach (var mapping in mappings)
+            {
+                using var command = new NpgsqlCommand(sql, connection, transaction);
+                command.Parameters.AddWithValue("columnProductName", mapping.ColumnProductName);
+                command.Parameters.AddWithValue("columnBrand", mapping.ColumnBrand);
+                command.Parameters.AddWithValue("columnCatalogName", mapping.ColumnCatalogName); // либо "column_catalog_name"
+                command.Parameters.AddWithValue("columnQuantity", mapping.ColumnQuantity);
+                command.Parameters.AddWithValue("columnPrice", mapping.ColumnPrice);
+                command.Parameters.AddWithValue("columnMultiple", mapping.ColumnMultiple); // всегда передаем число (0, если не задано)
+                command.Parameters.AddWithValue("supplierId", mapping.SupplierId);
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
+
+        // Получение списка локальностей
+        public static async Task<List<LocalityOption>> GetLocalityOptionsAsync()
+        {
+            var options = new List<LocalityOption>();
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sql = "SELECT id, name, delivery_time FROM localities";
+            using var command = new NpgsqlCommand(sql, connection);
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                options.Add(new LocalityOption
+                {
+                    Id = reader.GetGuid(reader.GetOrdinal("id")),
+                    Name = reader.GetString(reader.GetOrdinal("name")),
+                    DeliveryTime = reader.GetInt32(reader.GetOrdinal("delivery_time"))
+                });
+            }
+
+
+
+            return options;
+        }
+
+        // Добавление новой локальности
+        public static async Task AddLocalityAsync(LocalityOption locality)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sql = "INSERT INTO localities (id, name, delivery_time) VALUES (@id, @name, @deliveryTime)";
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("id", locality.Id);
+            command.Parameters.AddWithValue("name", locality.Name);
+            command.Parameters.AddWithValue("deliveryTime", locality.DeliveryTime);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // Обновление локальности
+        public static async Task SaveLocalitiesAsync(IEnumerable<LocalityOption> localities)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+            using var transaction = await connection.BeginTransactionAsync();
+
+            var sql = "UPDATE localities SET name = @name, delivery_time = @deliveryTime WHERE id = @id";
+
+            foreach (var loc in localities)
+            {
+                using var command = new NpgsqlCommand(sql, connection, transaction);
+                command.Parameters.AddWithValue("name", loc.Name);
+                command.Parameters.AddWithValue("deliveryTime", loc.DeliveryTime);
+                command.Parameters.AddWithValue("id", loc.Id);
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
+
+
+        // Удаление локальности
+        public static async Task DeleteLocalityAsync(LocalityOption locality)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sql = "DELETE FROM localities WHERE id = @id";
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("id", locality.Id);
             await command.ExecuteNonQueryAsync();
         }
     }

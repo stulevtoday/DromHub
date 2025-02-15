@@ -30,13 +30,13 @@
                    LargeChange="10"
                    Value="0"/>
 
-        <TextBlock Text="Наценка (%):"/>
+        <TextBlock Text="Коэфициент наценки (1,xx):"/>
         <NumberBox x:Name="MarkupNumberBox"
-                   PlaceholderText="Введите процент наценки"
-                   Minimum="0"
-                   Maximum="1000"
-                   SmallChange="1"
-                   LargeChange="10"
-                   Value="0"/>
+                   PlaceholderText="Введите коэфициент наценки"
+                   Minimum="1"
+                   Maximum="10"
+                   SmallChange="0.01"
+                   LargeChange="0.05"
+                   Value="1"/>
     </StackPanel>
 </ContentDialog>

@@ -13,9 +13,17 @@
         <TextBox x:Name="EmailTextBox"
                  Header="Почта"
                  PlaceholderText="Введите почту"/>
-        <TextBox x:Name="LocalityTextBox"
-                 Header="Локальность"
-                 PlaceholderText="Введите локальность"/>
-        
+        <!-- ComboBox для выбора локальности -->
+        <ComboBox x:Name="LocalityComboBox"
+                  Header="Локальность"
+                  PlaceholderText="Выберите локальность"
+                  DisplayMemberPath="Name"
+                  SelectedValuePath="Id"/>
+        <NumberBox x:Name="IndexNumberBox"
+                   Header="Индекс"
+                   Minimum="0"
+                   SmallChange="1"
+                   LargeChange="1"
+                   Value="0"/>
     </StackPanel>
 </ContentDialog>
