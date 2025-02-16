@@ -531,7 +531,7 @@ namespace DromHubSettings.Serviсes
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
 
-            var sql = "SELECT id, name, delivery_time FROM localities";
+            var sql = "SELECT id, name, delivery_time, export_email FROM localities";
             using var command = new NpgsqlCommand(sql, connection);
             using var reader = await command.ExecuteReaderAsync();
 
@@ -541,14 +541,14 @@ namespace DromHubSettings.Serviсes
                 {
                     Id = reader.GetGuid(reader.GetOrdinal("id")),
                     Name = reader.GetString(reader.GetOrdinal("name")),
-                    DeliveryTime = reader.GetInt32(reader.GetOrdinal("delivery_time"))
+                    DeliveryTime = reader.GetInt32(reader.GetOrdinal("delivery_time")),
+                    ExportEmail = reader.GetString(reader.GetOrdinal("export_email"))
                 });
             }
 
-
-
             return options;
         }
+
 
         // Добавление новой локальности
         public static async Task AddLocalityAsync(LocalityOption locality)
@@ -556,13 +556,16 @@ namespace DromHubSettings.Serviсes
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
 
-            var sql = "INSERT INTO localities (id, name, delivery_time) VALUES (@id, @name, @deliveryTime)";
+            var sql = "INSERT INTO localities (id, name, delivery_time, export_email) " +
+                      "VALUES (@id, @name, @deliveryTime, @exportEmail)";
             using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("id", locality.Id);
             command.Parameters.AddWithValue("name", locality.Name);
             command.Parameters.AddWithValue("deliveryTime", locality.DeliveryTime);
+            command.Parameters.AddWithValue("exportEmail", locality.ExportEmail);
             await command.ExecuteNonQueryAsync();
         }
+
 
         // Обновление локальности
         public static async Task SaveLocalitiesAsync(IEnumerable<LocalityOption> localities)
@@ -571,7 +574,7 @@ namespace DromHubSettings.Serviсes
             await connection.OpenAsync();
             using var transaction = await connection.BeginTransactionAsync();
 
-            var sql = "UPDATE localities SET name = @name, delivery_time = @deliveryTime WHERE id = @id";
+            var sql = "UPDATE localities SET name = @name, delivery_time = @deliveryTime, export_email = @exportEmail WHERE id = @id";
 
             foreach (var loc in localities)
             {
@@ -579,6 +582,7 @@ namespace DromHubSettings.Serviсes
                 command.Parameters.AddWithValue("name", loc.Name);
                 command.Parameters.AddWithValue("deliveryTime", loc.DeliveryTime);
                 command.Parameters.AddWithValue("id", loc.Id);
+                command.Parameters.AddWithValue("exportEmail", loc.ExportEmail);
                 await command.ExecuteNonQueryAsync();
             }
 
@@ -596,6 +600,56 @@ namespace DromHubSettings.Serviсes
             using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("id", locality.Id);
             await command.ExecuteNonQueryAsync();
+        }
+
+        public static async Task<MailSettings> GetMailSettingsAsync()
+        {
+            MailSettings settings = null;
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sql = "SELECT id, download_email, download_password, upload_email, upload_password FROM mail_settings LIMIT 1";
+            using var command = new NpgsqlCommand(sql, connection);
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                settings = new MailSettings
+                {
+                    Id = reader.GetGuid(reader.GetOrdinal("id")),
+                    DownloadEmail = reader.GetString(reader.GetOrdinal("download_email")),
+                    // Расшифровываем пароли после загрузки
+                    DownloadPassword = Helpers.CryptoHelper.DecryptString(reader.GetString(reader.GetOrdinal("download_password"))),
+                    UploadEmail = reader.GetString(reader.GetOrdinal("upload_email")),
+                    UploadPassword = Helpers.CryptoHelper.DecryptString(reader.GetString(reader.GetOrdinal("upload_password")))
+                };
+            }
+            return settings;
+        }
+
+        public static async Task SaveMailSettingsAsync(MailSettings settings)
+        {
+            using var connection = new Npgsql.NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sqlUpsert = @"
+                INSERT INTO mail_settings (id, download_email, download_password, upload_email, upload_password)
+                VALUES (@id, @downloadEmail, @downloadPassword, @uploadEmail, @uploadPassword)
+                ON CONFLICT (id)
+                DO UPDATE SET
+                    download_email = EXCLUDED.download_email,
+                    download_password = EXCLUDED.download_password,
+                    upload_email = EXCLUDED.upload_email,
+                    upload_password = EXCLUDED.upload_password;";
+
+
+            using var cmdUpdate = new Npgsql.NpgsqlCommand(sqlUpsert, connection);
+            cmdUpdate.Parameters.AddWithValue("id", settings.Id);
+            cmdUpdate.Parameters.AddWithValue("downloadEmail", settings.DownloadEmail);
+            cmdUpdate.Parameters.AddWithValue("downloadPassword", Helpers.CryptoHelper.EncryptString(settings.DownloadPassword));
+            cmdUpdate.Parameters.AddWithValue("uploadEmail", settings.UploadEmail);
+            cmdUpdate.Parameters.AddWithValue("uploadPassword", Helpers.CryptoHelper.EncryptString(settings.UploadPassword));
+
+            await cmdUpdate.ExecuteNonQueryAsync();
         }
     }
 }

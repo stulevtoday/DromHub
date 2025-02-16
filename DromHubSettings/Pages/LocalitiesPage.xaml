@@ -32,11 +32,13 @@
         <!-- (1) Шапка столбцов -->
         <Grid Grid.Row="1" Margin="48,0,48,8" Padding="8" ColumnSpacing="24">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <!-- Название -->
                 <ColumnDefinition Width="*"/>
+                <!-- Название -->
+                <ColumnDefinition Width="0.5*"/>
                 <!-- Срок доставки -->
-                <ColumnDefinition Width="0.4*"/>
+                <ColumnDefinition Width="*"/>
+                <!-- Почта для выгрузки -->
+                <ColumnDefinition Width="0.2*"/>
                 <!-- Удалить -->
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0"
@@ -50,6 +52,11 @@
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"/>
             <TextBlock Grid.Column="2"
+                       Text="Почта для выгрузки"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Grid.Column="3"
                        Text="Удалить"
                        Style="{StaticResource BodyStrongTextBlockStyle}"
                        VerticalAlignment="Center"
@@ -70,9 +77,10 @@
                             Margin="0,0,0,8">
                         <Grid Padding="8" ColumnSpacing="16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="0.4*"/>
+                                <ColumnDefinition Width="0.5*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="0.2*"/>
                             </Grid.ColumnDefinitions>
 
                             <!-- Название локальности -->
@@ -91,8 +99,14 @@
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Stretch"/>
 
+                            <!-- Почта для выгрузки -->
+                            <TextBox Grid.Column="2"
+                                     Text="{x:Bind ExportEmail, Mode=TwoWay}"
+                                     PlaceholderText="Введите почту для выгрузки"
+                                     VerticalAlignment="Center"/>
+
                             <!-- Кнопка удаления локальности -->
-                            <Button Grid.Column="2"
+                            <Button Grid.Column="3"
                                     VerticalAlignment="Center"
                                     HorizontalAlignment="Center"
                                     Click="DeleteButton_Click">

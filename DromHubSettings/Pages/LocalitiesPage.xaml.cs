@@ -53,7 +53,8 @@ namespace DromHubSettings.Pages
                 {
                     Id = System.Guid.NewGuid(),
                     Name = dialog.LocalityName,
-                    DeliveryTime = dialog.DeliveryTime
+                    DeliveryTime = dialog.DeliveryTime,
+                    ExportEmail = dialog.ExportEmail
                 };
 
                 await DataService.AddLocalityAsync(newLocality);
@@ -66,8 +67,35 @@ namespace DromHubSettings.Pages
         {
             if (sender is Button button && button.DataContext is Models.LocalityOption locality)
             {
-                ViewModel.Localities.Remove(locality);
-                await DataService.DeleteLocalityAsync(locality);
+                try
+                {
+                    ViewModel.Localities.Remove(locality);
+                    await DataService.DeleteLocalityAsync(locality);
+                }
+                catch (Npgsql.PostgresException ex) when (ex.SqlState == "23503")
+                {
+                    // 23503 – нарушение внешнего ключа
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Ошибка",
+                        Content = "Невозможно обновить или удалить локальность, так как она используется некоторыми поставщиками. Пожалуйста, измените или удалите связанные записи.",
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                    this.Frame.Navigate(typeof(LocalitiesPage));
+                }
+                catch (Exception ex)
+                {
+                    var errorDialog = new ContentDialog
+                    {
+                        Title = "Ошибка",
+                        Content = "Произошла ошибка: " + ex.Message,
+                        CloseButtonText = "OK",
+                        XamlRoot = this.XamlRoot
+                    };
+                    await errorDialog.ShowAsync();
+                }
             }
         }
 
@@ -87,6 +115,19 @@ namespace DromHubSettings.Pages
                     XamlRoot = this.XamlRoot
                 };
                 await successDialog.ShowAsync();
+            }
+            catch (Npgsql.PostgresException ex) when (ex.SqlState == "23503")
+            {
+                // 23503 – нарушение внешнего ключа
+                var errorDialog = new ContentDialog
+                {
+                    Title = "Ошибка при сохранении",
+                    Content = "Невозможно обновить или удалить локальность, так как она используется некоторыми поставщиками. Пожалуйста, измените или удалите связанные записи.",
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+                await errorDialog.ShowAsync();
+                this.Frame.Navigate(typeof(LocalitiesPage));
             }
             catch (Exception ex)
             {

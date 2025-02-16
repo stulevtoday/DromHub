@@ -15,6 +15,9 @@ namespace DromHubSettings.Dialogs
         // Свойство для получения срока доставки (в днях)
         public int DeliveryTime => (int)DeliveryTimeNumberBox.Value;
 
+        public string ExportEmail => ExportEmailTextBox.Text;
+
+
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
             // Здесь можно добавить дополнительную валидацию, если требуется

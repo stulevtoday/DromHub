@@ -5,8 +5,7 @@
     Title="Добавить локальность"
     PrimaryButtonText="Добавить"
     SecondaryButtonText="Отмена"
-    RequestedTheme="Light"
-    PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
+    RequestedTheme="Light">
     <StackPanel Spacing="12">
         <TextBox x:Name="LocalityNameTextBox"
                  Header="Название"
@@ -18,5 +17,8 @@
                    SmallChange="1"
                    LargeChange="1"
                    Value="0"/>
+        <TextBox x:Name="ExportEmailTextBox"
+                 Header="Почта для выгрузки"
+                 PlaceholderText="Введите почту для выгрузки"/>
     </StackPanel>
 </ContentDialog>

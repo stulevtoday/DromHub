@@ -24,7 +24,7 @@
             <NavigationViewItem Content="Локальности" Icon="People" Tag="LocalitiesPage"/>
 			<NavigationViewItem Content="Почта" Icon="Mail" Tag="SamplePage4">
 				<NavigationViewItem.MenuItems>
-					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>
+					<NavigationViewItem Content="Mail" Tag="MailSettingsPage"/>
 					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>
 				</NavigationViewItem.MenuItems>
 			</NavigationViewItem>
