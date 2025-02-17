@@ -14,6 +14,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Dialogs\AddLocalityDialog.xaml" />
+    <None Remove="Pages\ExportLayoutPage.xaml" />
     <None Remove="Pages\LocalitiesPage.xaml" />
     <None Remove="Pages\MailSettingsPage.xaml" />
     <None Remove="Pages\MainPage.xaml" />
@@ -49,6 +50,11 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250108002" />
     <PackageReference Include="Npgsql" Version="9.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Pages\ExportLayoutPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Pages\MailSettingsPage.xaml">

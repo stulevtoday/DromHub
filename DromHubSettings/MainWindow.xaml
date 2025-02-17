@@ -25,7 +25,7 @@
 			<NavigationViewItem Content="Почта" Icon="Mail" Tag="SamplePage4">
 				<NavigationViewItem.MenuItems>
 					<NavigationViewItem Content="Mail" Tag="MailSettingsPage"/>
-					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>
+                    <NavigationViewItem Content="Calendar" Tag="ExportLayoutPage"/>
 				</NavigationViewItem.MenuItems>
 			</NavigationViewItem>
 			<NavigationViewItem Content="Парсер" Icon="Globe" Tag="SamplePage4">

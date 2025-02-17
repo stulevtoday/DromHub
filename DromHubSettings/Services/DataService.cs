@@ -651,5 +651,95 @@ namespace DromHubSettings.Serviсes
 
             await cmdUpdate.ExecuteNonQueryAsync();
         }
+
+        public static async Task<List<ExportLayoutMapping>> GetExportLayoutMappingsAsync()
+        {
+            var list = new List<ExportLayoutMapping>();
+
+            using var connection = new Npgsql.NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sql = "SELECT id, field_key, header_text, column_number FROM export_layout_mappings ORDER BY column_number";
+            using var command = new Npgsql.NpgsqlCommand(sql, connection);
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                list.Add(new ExportLayoutMapping
+                {
+                    Id = reader.GetGuid(reader.GetOrdinal("id")),
+                    FieldKey = reader.GetString(reader.GetOrdinal("field_key")),
+                    HeaderText = reader.GetString(reader.GetOrdinal("header_text")),
+                    ColumnNumber = reader.GetInt32(reader.GetOrdinal("column_number"))
+                });
+            }
+            return list;
+        }
+        public static async Task SaveExportLayoutMappingsAsync(IEnumerable<ExportLayoutMapping> mappings)
+        {
+            using var connection = new Npgsql.NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+            using var transaction = await connection.BeginTransactionAsync();
+
+            // Для каждого маппинга выполняем UPSERT (INSERT с обновлением при конфликте)
+            var sql = @"
+                INSERT INTO export_layout_mappings (id, header_text, column_number, field_key)
+                VALUES (@id, @headerText, @columnNumber, @fieldKey)
+                ON CONFLICT (id) DO UPDATE
+                SET header_text = EXCLUDED.header_text,
+                    column_number = EXCLUDED.column_number,
+                    field_key = EXCLUDED.field_key;";
+
+            foreach (var mapping in mappings)
+            {
+                using var command = new Npgsql.NpgsqlCommand(sql, connection, transaction);
+                command.Parameters.AddWithValue("headerText", mapping.HeaderText);
+                command.Parameters.AddWithValue("columnNumber", mapping.ColumnNumber);
+                command.Parameters.AddWithValue("id", mapping.Id);
+                command.Parameters.AddWithValue("fieldKey", mapping.FieldKey); ;
+
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
+
+
+        public static async Task<ExportLayoutSettings> GetExportLayoutSettingsAsync()
+        {
+            ExportLayoutSettings settings = null;
+            using var connection = new Npgsql.NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sql = "SELECT id, start_row FROM export_layout_settings LIMIT 1";
+            using var command = new Npgsql.NpgsqlCommand(sql, connection);
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                settings = new ExportLayoutSettings
+                {
+                    Id = reader.GetGuid(reader.GetOrdinal("id")),
+                    StartRow = reader.GetInt32(reader.GetOrdinal("start_row"))
+                };
+            }
+            return settings;
+        }
+
+        public static async Task SaveExportLayoutSettingsAsync(ExportLayoutSettings settings)
+        {
+            using var connection = new Npgsql.NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            var sqlUpsert = @"
+                INSERT INTO export_layout_settings (id, start_row)
+                VALUES (@id, @startRow)
+                ON CONFLICT (id)
+                DO UPDATE SET start_row = EXCLUDED.start_row;";
+
+            using var command = new Npgsql.NpgsqlCommand(sqlUpsert, connection);
+            command.Parameters.AddWithValue("id", settings.Id);
+            command.Parameters.AddWithValue("startRow", settings.StartRow);
+            await command.ExecuteNonQueryAsync();
+        }
+
     }
 }

@@ -21,11 +21,13 @@
         </Grid.RowDefinitions>
 
         <!-- (0) Заголовок и описание -->
-        <StackPanel Grid.Row="0" Margin="36,24,36,16">
+        <StackPanel Grid.Row="0">
             <TextBlock Text="Настройки почты"
-                       Style="{StaticResource TitleTextBlockStyle}"/>
+                       Style="{StaticResource TitleTextBlockStyle}"
+                       Margin="36,24,36,0"/>
             <TextBlock Text="Укажите учетные данные для получения и выгрузки прайс-листов."
-                       Style="{ThemeResource BodyTextBlockStyle}"/>
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Margin="36,8,36,16"/>
         </StackPanel>
 
         <!-- (1) Основное содержимое со скроллом -->

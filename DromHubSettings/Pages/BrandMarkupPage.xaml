@@ -1,115 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="DromHubSettings.Pages.BrandMarkupsPage"
+    x:Name="pageRoot"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:DromHubSettings.Pages"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:converters="using:DromHubSettings.Converters"
-    xmlns:models="using:DromHubSettings.Models"
+    xmlns:vm="using:DromHubSettings.ViewModels"
     xmlns:dialogs="using:DromHubSettings.Dialogs"
-    mc:Ignorable="d"
+    xmlns:models="using:DromHubSettings.Models"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Page.Resources>
-        <converters:UpperCaseConverter x:Key="UpperCaseConverter"/>
-    </Page.Resources>
+    <Page.DataContext>
+        <vm:MarkupPageViewModel/>
+    </Page.DataContext>
 
     <Grid>
         <Grid.RowDefinitions>
-            <!-- (0) Заголовок и описание -->
+            <!-- Заголовок и описание -->
             <RowDefinition Height="Auto"/>
-            <!-- (1) Шапка столбцов -->
-            <RowDefinition Height="Auto"/>
-            <!-- (2) Список брендов -->
+            <!-- Список наценок -->
             <RowDefinition Height="*"/>
-            <!-- (3) Кнопки внизу -->
+            <!-- Кнопки внизу -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- (0) Заголовочная область -->
-        <StackPanel Grid.Row="0">
-            <TextBlock x:Name="PageHeader"
-                       Text="Наценки по бренду"
-                       Margin="36,24,36,0"
+        <!-- Заголовок и описание -->
+        <StackPanel Grid.Row="0" Margin="36,24,36,16">
+            <TextBlock Text="Наценки по бренду" 
                        Style="{StaticResource TitleTextBlockStyle}"/>
-            <TextBlock x:Name="PageDescription"
-                       Margin="36,8,36,16"
-                       Style="{ThemeResource BodyTextBlockStyle}"
-                       Text="На этой странице вы можете управлять коэфициентом наценки для брендов. Здесь для каждого бренда можно задать или изменить наценку, удалить элемент."/>
+            <TextBlock Text="Управляйте наценками для брендов. Вы можете добавлять, удалять и сохранять изменения."
+                       Style="{ThemeResource BodyTextBlockStyle}"/>
         </StackPanel>
 
-        <!-- (1) Шапка столбцов -->
-        <Grid Grid.Row="1"
-              Margin="48,0,48,8"
-              Padding="8"
-              ColumnSpacing="24">
-            <Grid.ColumnDefinitions>
-                <!-- Столбцы: BrandName (шире), Markup, Кнопка удаления -->
-                <ColumnDefinition Width="4*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="0.4*"/>
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Column="0"
-                       Text="Бренд"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="1"
-                       Text="Коэфициент наценки (1,xx)"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="2"
-                       Text="Удалить"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-        </Grid>
-
-        <!-- (2) Список брендов (ListView) -->
-        <ListView Grid.Row="2"
-                  x:Name="BrandListView"
+        <!-- Список наценок -->
+        <ListView Grid.Row="1"
+                  x:Name="BrandMarkupsListView"
                   Margin="36,0,36,0"
-                  ItemsSource="{x:Bind ViewModel.BrandMarkups, Mode=OneWay}"
+                  ItemsSource="{Binding BrandMarkups}"
                   SelectionMode="None"
                   HorizontalContentAlignment="Stretch">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="models:BrandMarkup">
-                    <!-- Оборачиваем элемент в Border для визуального разделения -->
                     <Border Background="{ThemeResource SystemControlBackgroundAltMediumBrush}"
                             CornerRadius="4"
                             Margin="0,0,0,8">
                         <Grid Padding="8" ColumnSpacing="16">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="4*"/>
+                                <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="0.4*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-
-                            <!-- Бренд (преобразуем в верхний регистр конвертером, убрали Header) -->
+                            <!-- Название бренда -->
                             <TextBox Grid.Column="0"
-                                     Text="{x:Bind BrandName, Mode=TwoWay, Converter={StaticResource UpperCaseConverter}}"
+                                     Text="{x:Bind BrandName, Mode=TwoWay}"
                                      PlaceholderText="Введите название бренда"
                                      VerticalAlignment="Center"/>
-
-                            <!-- Наценка (убрали Header) -->
+                            <!-- Наценка -->
                             <NumberBox Grid.Column="1"
                                        Value="{x:Bind Markup, Mode=TwoWay}"
-                                       Minimum="1"
-                                       Maximum="10"
-                                       SmallChange="0.01"
-                                       LargeChange="0.05"
-                                       PlaceholderText="Коэфициент наценки"
+                                       Minimum="0"
+                                       Maximum="1000"
+                                       SmallChange="1"
+                                       LargeChange="10"
+                                       PlaceholderText="Наценка (%)"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Stretch"/>
-
-                            <!-- Кнопка удаления элемента -->
+                            <!-- Кнопка удаления: Команда берётся из ViewModel через ElementName -->
                             <Button Grid.Column="2"
+                                    Command="{Binding DataContext.DeleteCommand, ElementName=pageRoot}"
+                                    CommandParameter="{x:Bind}"
                                     VerticalAlignment="Center"
-                                    HorizontalAlignment="Center"
-                                    Click="DeleteButton_Click">
+                                    HorizontalAlignment="Center">
                                 <SymbolIcon Symbol="Delete"/>
                             </Button>
                         </Grid>
@@ -118,13 +78,9 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <!-- (3) Кнопки внизу страницы -->
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,16,16,16"
-                    Spacing="12">
-            <Button Content="Добавить новый бренд" Click="AddButton_Click"/>
+        <!-- Кнопки добавления и сохранения -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,16,16" Spacing="12">
+            <Button Content="Добавить бренд" Click="AddButton_Click"/>
             <Button Content="Сохранить изменения" Click="SaveButton_Click"/>
         </StackPanel>
     </Grid>
