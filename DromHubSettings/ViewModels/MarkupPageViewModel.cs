@@ -9,25 +9,62 @@ using DromHubSettings.Serviсes;
 using DromHubSettings.Helpers;
 using DromHubSettings.Dialogs;
 using Microsoft.UI.Xaml.Controls;
+using System.Collections.Generic;
 
 namespace DromHubSettings.ViewModels
 {
+    // Класс группы для BrandMarkup
+    public class BrandMarkupGroup : ObservableCollection<BrandMarkup>
+    {
+        public string Key { get; }
+
+        public BrandMarkupGroup(string key, IEnumerable<BrandMarkup> items) : base(items)
+        {
+            Key = key;
+        }
+    }
+
     public class MarkupPageViewModel : INotifyPropertyChanged
     {
         // Коллекция наценок по брендам
         public ObservableCollection<BrandMarkup> BrandMarkups { get; } = new ObservableCollection<BrandMarkup>();
 
-        // События для уведомления View о результате сохранения
-        public event EventHandler SaveSucceeded;
-        public event EventHandler<string> SaveFailed;
+        // Свойство, возвращающее сгруппированные наценки (группировка по первой букве BrandName)
+        public IEnumerable<BrandMarkupGroup> GroupedBrandMarkups
+        {
+            get
+            {
+                return BrandMarkups
+                    .GroupBy(b => b.GroupKey)
+                    .OrderBy(g => g.Key)
+                    .Select(g => new BrandMarkupGroup(g.Key, g))
+                    .ToList();
+            }
+        }
+
+        private BrandMarkup _selectedMarkup;
+        // Текущий выбранный для редактирования элемент
+        public BrandMarkup SelectedMarkup
+        {
+            get => _selectedMarkup;
+            set { _selectedMarkup = value; OnPropertyChanged(); }
+        }
+
+        // События для уведомления View о результате
+        public event EventHandler<string> Succeeded;
+        public event EventHandler<string> Fail;
 
         // Асинхронные команды
         public RelayCommand DeleteCommand { get; }
         public RelayCommand SaveCommand { get; }
         public RelayCommand LoadCommand { get; }
+        public RelayCommand EditCommand { get; }
 
         public MarkupPageViewModel()
         {
+            // Подписка на изменение коллекции, чтобы обновлять группировку при любых изменениях
+            BrandMarkups.CollectionChanged += (s, e) => OnPropertyChanged(nameof(GroupedBrandMarkups));
+
             // Команда на удаление: принимает текущий объект BrandMarkup
             DeleteCommand = new RelayCommand(async param => await DeleteBrandMarkupAsync(param));
             // Команда на сохранение изменений
@@ -43,7 +80,7 @@ namespace DromHubSettings.ViewModels
         {
             try
             {
-                var list = await DataService.GetBrandMarkupsAsync();
+                var list = await DataService.LoadBrandMarkupsAsync();
                 BrandMarkups.Clear();
                 foreach (var item in list.OrderBy(b => b.BrandName))
                 {
@@ -53,7 +90,7 @@ namespace DromHubSettings.ViewModels
             catch (Exception ex)
             {
                 // Можно поднять событие об ошибке, если необходимо
-                SaveFailed?.Invoke(this, ex.Message);
+                Fail?.Invoke(this, ex.Message);
             }
         }
 
@@ -66,12 +103,12 @@ namespace DromHubSettings.ViewModels
             {
                 await DataService.SaveBrandMarkupsAsync(BrandMarkups);
                 // Если сохранение прошло успешно, поднимаем событие успеха
-                SaveSucceeded?.Invoke(this, EventArgs.Empty);
+                Succeeded?.Invoke(this, "Данные успешно обновлены");
             }
             catch (Exception ex)
             {
                 // При ошибке сохраняем сообщение и поднимаем событие ошибки
-                SaveFailed?.Invoke(this, ex.Message);
+                Fail?.Invoke(this, ex.Message);
             }
         }
 

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Data;
 
-namespace DromHubSettings.Converters
+namespace DromHubSettings.Helpers
 {
     public class UpperCaseConverter : IValueConverter
     {

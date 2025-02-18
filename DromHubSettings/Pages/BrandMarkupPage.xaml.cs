@@ -15,45 +15,45 @@ namespace DromHubSettings.Pages
         public BrandMarkupsPage()
         {
             this.InitializeComponent();
+            this.Loaded += BrandMarkupsPage_Loaded;
 
             if (this.DataContext is MarkupPageViewModel vm)
             {
-                vm.SaveSucceeded += Vm_SaveSucceeded;
-                vm.SaveFailed += Vm_SaveFailed;
+                vm.Succeeded += Vm_Succeeded;
+                vm.Fail += Vm_Fail;
             }
         }
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        private async void BrandMarkupsPage_Loaded(object sender, RoutedEventArgs e)
         {
-            base.OnNavigatedTo(e);
             if (this.DataContext is MarkupPageViewModel vm)
             {
                 await vm.LoadBrandMarkupsAsync();
             }
         }
 
-        private async void Vm_SaveSucceeded(object sender, EventArgs e)
+        private async void Vm_Succeeded(object sender, string content)
         {
             var successDialog = new ContentDialog
             {
-                Title = "Сохранено",
-                Content = "Данные успешно обновлены.",
+                Title = "Успешно",
+                Content = content,
                 CloseButtonText = "OK",
                 XamlRoot = this.XamlRoot
             };
             await successDialog.ShowAsync();
         }
 
-        private async void Vm_SaveFailed(object sender, string error)
+        private async void Vm_Fail(object sender, string content)
         {
-            var errorDialog = new ContentDialog
+            var successDialog = new ContentDialog
             {
-                Title = "Ошибка при сохранении",
-                Content = "Произошла ошибка: " + error,
+                Title = "Неудача",
+                Content = "Ошибка - " + content,
                 CloseButtonText = "OK",
                 XamlRoot = this.XamlRoot
             };
-            await errorDialog.ShowAsync();
+            await successDialog.ShowAsync();
         }
 
         // Обработчик кнопки "Добавить бренд" в Code-behind

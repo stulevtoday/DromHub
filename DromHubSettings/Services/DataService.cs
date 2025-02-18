@@ -11,7 +11,7 @@ namespace DromHubSettings.Serviсes
     {
         private static readonly string ConnectionString = "Host=localhost;Username=postgres;Password=admin;Database=postgres";
 
-        public static async Task<List<BrandMarkup>> GetBrandMarkupsAsync()
+        public static async Task<List<BrandMarkup>> LoadBrandMarkupsAsync()
         {
             var brandMarkups = new List<BrandMarkup>();
 
