@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="DromHubSettings.Pages.EmailAuthenticationPage"
+    x:Name="pageRoot"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:DromHubSettings.ViewModels"
+    xmlns:dialogs="using:DromHubSettings.Dialogs"
+    xmlns:models="using:DromHubSettings.Models"
+    xmlns:helpers="using:DromHubSettings.Helpers"
+    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">
+
+    <!-- DataContext установлен через публичное свойство ViewModel -->
+    <Page.DataContext>
+        <vm:EmailAuthenticationViewModel/>
+    </Page.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- (0) Заголовок и описание страницы -->
+            <RowDefinition Height="Auto"/>
+            <!-- (1) Основное содержимое (прокручиваемая область) -->
+            <RowDefinition Height="*"/>
+            <!-- (2) Панель с кнопкой сохранения -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- (0) Заголовок и описание страницы -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Настройка почтовых учетных записей"
+                       Style="{StaticResource TitleTextBlockStyle}"
+                       Margin="36,24,36,0"/>
+            <TextBlock Text="Укажите адреса и пароли для доступа к почте, используемой для импорта и экспорта прайс-листов. Настройте учетные данные для получения данных (импорт) и отправки данных (экспорт)."
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Margin="36,8,36,16"/>
+        </StackPanel>
+
+        <!-- (1) Основное содержимое -->
+        <ScrollViewer Grid.Row="1"
+                      Margin="36,0,36,0"
+                      VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Группа настроек "Импорт" -->
+                <Border Grid.Column="0"
+                        BorderThickness="1"
+                        BorderBrush="Gray"
+                        CornerRadius="4"
+                        Padding="12"
+                        Margin="0,0,8,0">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Импорт"
+                                   Style="{StaticResource TitleTextBlockStyle}"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock Text="Почта"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <TextBox x:Name="DownloadEmailTextBox"
+                                 Text="{Binding EmailAuthentications[0].DownloadEmail, Mode=TwoWay}"
+                                 PlaceholderText="Введите почту"/>
+                        <TextBlock Text="Пароль"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <PasswordBox x:Name="DownloadPasswordBox"
+                                         Grid.Column="0"
+                                         PlaceholderText="Введите пароль"
+                                         helpers:PasswordBoxHelper.BoundPassword="{Binding EmailAuthentications[0].DownloadPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         PasswordRevealMode="Peek"/>
+                            <CheckBox Grid.Column="1"
+                                      Content="Показать пароль"
+                                      Margin="8,0,0,0"
+                                      Checked="ShowDownloadPasswordCheckBox_Checked"
+                                      Unchecked="ShowDownloadPasswordCheckBox_Unchecked"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Группа настроек "Экспорт" -->
+                <Border Grid.Column="1"
+                        BorderThickness="1"
+                        BorderBrush="Gray"
+                        CornerRadius="4"
+                        Padding="12"
+                        Margin="8,0,0,0">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Экспорт"
+                                   Style="{StaticResource TitleTextBlockStyle}"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock Text="Почта"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <TextBox x:Name="UploadEmailTextBox"
+                                 Text="{Binding EmailAuthentications[0].UploadEmail, Mode=TwoWay}"
+                                 PlaceholderText="Введите почту"/>
+                        <TextBlock Text="Пароль"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <PasswordBox x:Name="UploadPasswordBox"
+                                         Grid.Column="0"
+                                         PlaceholderText="Введите пароль"
+                                         helpers:PasswordBoxHelper.BoundPassword="{Binding EmailAuthentications[0].UploadPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         PasswordRevealMode="Peek"/>
+                            <CheckBox Grid.Column="1"
+                                      Content="Показать пароль"
+                                      Margin="8,0,0,0"
+                                      Checked="ShowUploadPasswordCheckBox_Checked"
+                                      Unchecked="ShowUploadPasswordCheckBox_Unchecked"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- (2) Панель с кнопкой сохранения -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,16,16">
+            <Button Content="Сохранить изменения"
+                    Click="SaveButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Page>

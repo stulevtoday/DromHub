@@ -17,7 +17,7 @@ namespace DromHubSettings.Dialogs
 
         private async void AddSupplierDialog_Loaded(object sender, RoutedEventArgs e)
         {
-            var localities = await DataService.GetLocalityOptionsAsync();
+            var localities = await DataService.LoadLocalitiesAsync();
             LocalityComboBox.ItemsSource = localities;
         }
 

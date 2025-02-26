@@ -8,21 +8,18 @@ using DromHubSettings.Models;
 using DromHubSettings.Serviсes;
 using DromHubSettings.Dialogs;
 
+
 namespace DromHubSettings.Pages
 {
-    /// <summary>
-    /// Страница управления поставщиками.
-    /// Здесь можно просматривать, добавлять, редактировать и удалять данные поставщиков.
-    /// </summary>
-    public sealed partial class SuppliersPage : Page
+    public sealed partial class SupplierLayoutPage : Page
     {
-        public SuppliersPage()
+        public SupplierLayoutPage()
         {
             this.InitializeComponent();
-            this.Loaded += SupplierPage_Loaded;
+            this.Loaded += SupplierLayoutPage_Loaded;
 
             // Подписка на события успешного выполнения и ошибки для отображения уведомлений пользователю.
-            if (this.DataContext is SupplierViewModel vm)
+            if (this.DataContext is SupplierLayoutViewModel vm)
             {
                 vm.Succeeded += Vm_Succeeded;
                 vm.Fail += Vm_Fail;
@@ -32,11 +29,11 @@ namespace DromHubSettings.Pages
         /// <summary>
         /// Обработчик загрузки страницы. Загружает данные поставщиков из базы.
         /// </summary>
-        private async void SupplierPage_Loaded(object sender, RoutedEventArgs e)
+        private async void SupplierLayoutPage_Loaded(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is SupplierViewModel vm)
+            if (this.DataContext is SupplierLayoutViewModel vm)
             {
-                await vm.LoadSuppliersAsync();
+                await vm.LoadSupplierLayoutsAsync();
             }
         }
 
@@ -71,44 +68,15 @@ namespace DromHubSettings.Pages
         }
 
         /// <summary>
-        /// Обработчик кнопки "Добавить поставщика".
-        /// Открывает диалоговое окно для ввода данных нового поставщика, затем добавляет его в коллекцию и сохраняет в базе.
-        /// </summary>
-        private async void AddButton_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new AddSupplierDialog();
-            dialog.XamlRoot = this.XamlRoot;
-            var result = await dialog.ShowAsync();
-
-            if (result == ContentDialogResult.Primary)
-            {
-                var newSupplier = new Supplier
-                {
-                    Id = Guid.NewGuid(),
-                    Name = dialog.SupplierName,
-                    Email = dialog.SupplierEmail,
-                    Index = dialog.SupplierIndex,
-                    LocalityId = dialog.SelectedLocalityId
-                };
-
-                if (this.DataContext is SupplierViewModel vm)
-                {
-                    vm.Suppliers.Add(newSupplier);
-                    await DataService.AddSupplierAsync(newSupplier);
-                }
-            }
-        }
-
-        /// <summary>
         /// Обработчик кнопки "Сохранить изменения".
         /// Сохраняет текущие изменения поставщиков в базе и обновляет данные.
         /// </summary>
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is SupplierViewModel vm)
+            if (this.DataContext is SupplierLayoutViewModel vm)
             {
-                await vm.SaveSuppliersAsync();
-                await vm.LoadSuppliersAsync();
+                await vm.SaveSupplierLayoutsAsync();
+                await vm.LoadSupplierLayoutsAsync();
             }
         }
     }

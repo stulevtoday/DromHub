@@ -14,12 +14,9 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Dialogs\AddLocalityDialog.xaml" />
-    <None Remove="Pages\ExportLayoutPage.xaml" />
+    <None Remove="Pages\ExportDefinitionPage.xaml" />
     <None Remove="Pages\LocalitiesPage.xaml" />
-    <None Remove="Pages\MailSettingsPage.xaml" />
     <None Remove="Pages\MainPage.xaml" />
-    <None Remove="Pages\PriceRangeMarkupsPage.xaml" />
-    <None Remove="Pages\SupplierExcelMappingsPage.xaml" />
     <None Remove="Pages\SupplierMarkupsPage.xaml" />
     <None Remove="Pages\SuppliersPage.xaml" />
   </ItemGroup>
@@ -52,12 +49,17 @@
     <PackageReference Include="Npgsql" Version="9.0.2" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Pages\ExportLayoutPage.xaml">
+    <Page Update="Dialogs\AddExportColumnDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Pages\MailSettingsPage.xaml">
+    <Page Update="Pages\ExportDefinitionPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Pages\EmailAuthenticationPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
@@ -72,7 +74,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Pages\SupplierExcelMappingsPage.xaml">
+    <Page Update="Pages\SupplierLayoutPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
@@ -87,12 +89,12 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Dialogs\AddPriceRangeDialog.xaml">
+    <Page Update="Dialogs\AddRangeMarkupDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Pages\PriceRangeMarkupsPage.xaml">
+    <Page Update="Pages\RangeMarkupsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

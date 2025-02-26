@@ -17,7 +17,7 @@
                    SmallChange="1"
                    LargeChange="1"
                    Value="0"/>
-        <TextBox x:Name="ExportEmailTextBox"
+        <TextBox x:Name="EmailTextBox"
                  Header="Почта для выгрузки"
                  PlaceholderText="Введите почту для выгрузки"/>
     </StackPanel>

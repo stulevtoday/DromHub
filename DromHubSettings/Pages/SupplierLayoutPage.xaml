@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="DromHubSettings.Pages.SupplierLayoutPage"
+    x:Name="pageRoot"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:DromHubSettings.ViewModels"
+    xmlns:dialogs="using:DromHubSettings.Dialogs"
+    xmlns:models="using:DromHubSettings.Models"
+    xmlns:helpers="using:DromHubSettings.Helpers"
+    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">
+
+    <!-- Устанавливаем ViewModel страницы -->
+    <Page.DataContext>
+        <vm:SupplierLayoutViewModel/>
+    </Page.DataContext>
+
+    <!-- Ресурс для группировки сопоставлений по ключу (например, по первой букве имени поставщика) -->
+    <Page.Resources>
+        <CollectionViewSource x:Key="GroupedSupplierLayouts"
+                              Source="{Binding GroupedSSupplierLayouts}"
+                              IsSourceGrouped="True"/>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- (0) Заголовок и описание страницы -->
+            <RowDefinition Height="Auto"/>
+            <!-- (1) Основное содержимое: список сопоставлений и форма редактирования -->
+            <RowDefinition Height="*"/>
+            <!-- (2) Нижняя панель с кнопками действий -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- (0) Заголовок страницы и описание -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Поставщики > Разметка Excel файлов"
+                       Style="{StaticResource TitleTextBlockStyle}"
+                       Margin="36,24,36,0"/>
+            <TextBlock Text="Укажите номера столбцов для соответствующих полей. Если столбец 'Множество' отсутствует, оставьте поле равным 0"
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Margin="36,8,36,16"/>
+        </StackPanel>
+
+        <!-- (1) Основное содержимое -->
+        <Grid Grid.Row="1" Margin="36,0,36,24">
+            <Grid.ColumnDefinitions>
+                <!-- Левая колонка: список сопоставлений с группировкой -->
+                <ColumnDefinition Width="0.5*"/>
+                <!-- Правая колонка: форма редактирования выбранного сопоставления -->
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Список сопоставлений Excel разметки -->
+            <ListView Grid.Column="0"
+                      x:Name="SuppliersListView"
+                      ItemsSource="{Binding Source={StaticResource GroupedSupplierLayouts}}"
+                      SelectedItem="{Binding SelectedSupplierLayout, Mode=TwoWay}"
+                      SelectionMode="Single"
+                      Margin="0,0,16,0"
+                      BorderThickness="1"
+                      BorderBrush="Gray"
+                      CornerRadius="4">
+                <!-- Группировка: заголовок группы отображает ключ (например, первая буква имени поставщика) -->
+                <ListView.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Key}"
+                                           Style="{StaticResource TitleTextBlockStyle}"
+                                           AutomationProperties.AccessibilityView="Raw"/>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </ListView.GroupStyle>
+                <!-- Каждый элемент списка отображает имя поставщика -->
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:SupplierLayout">
+                        <TextBlock Text="{x:Bind SupplierName}"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"
+                                   Margin="0,0,0,4"
+                                   HorizontalAlignment="Left"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!-- Форма редактирования выбранного сопоставления Excel разметки -->
+            <Grid Grid.Column="1"
+                  BorderThickness="1"
+                  BorderBrush="Gray"
+                  CornerRadius="4">
+                <Grid.RowDefinitions>
+                    <!-- (0) Статичный заголовок формы -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- (1) Прокручиваемая область с полями редактирования -->
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Заголовок формы редактирования -->
+                <StackPanel Grid.Row="0" Margin="16,8,16,8">
+                    <TextBlock Text="Редактирование сопоставления"
+                               Style="{StaticResource TitleTextBlockStyle}"
+                               Margin="0,0,0,8"/>
+                    <Border BorderBrush="LightGray"
+                            BorderThickness="0,1,0,0"
+                            Margin="0,0,0,4"/>
+                </StackPanel>
+
+                <!-- Прокручиваемая область с полями для редактирования -->
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel>
+                        <!-- Редактирование поставщика (имя, только для чтения) -->
+                        <StackPanel Margin="16,0,16,16">
+                            <TextBlock Text="Поставщик"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Margin="0,0,0,12"
+                                       VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding SelectedSupplierLayout.SupplierName, Mode=TwoWay}"
+                                     PlaceholderText="Введите новое имя поставщика"
+                                     IsReadOnly="True"/>
+                        </StackPanel>
+                        <!-- Редактирование номера столбца для Названия товара -->
+                        <StackPanel Margin="16,8,16,8">
+                            <TextBlock Text="Название"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Margin="0,0,0,12"
+                                       VerticalAlignment="Center"/>
+                            <NumberBox Value="{Binding SelectedSupplierLayout.ColumnProductName, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <!-- Редактирование номера столбца для Бренда -->
+                        <StackPanel Margin="16,8,16,8">
+                            <TextBlock Text="Бренд"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Margin="0,0,0,12"
+                                       VerticalAlignment="Center"/>
+                            <NumberBox Value="{Binding SelectedSupplierLayout.ColumnBrand, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <!-- Редактирование номера столбца для Артикула -->
+                        <StackPanel Margin="16,8,16,8">
+                            <TextBlock Text="Артикул"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Margin="0,0,0,12"
+                                       VerticalAlignment="Center"/>
+                            <NumberBox Value="{Binding SelectedSupplierLayout.ColumnCatalogName, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <!-- Редактирование номера столбца для Количества -->
+                        <StackPanel Margin="16,8,16,8">
+                            <TextBlock Text="Количество"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Margin="0,0,0,12"
+                                       VerticalAlignment="Center"/>
+                            <NumberBox Value="{Binding SelectedSupplierLayout.ColumnQuantity, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <!-- Редактирование номера столбца для Цены -->
+                        <StackPanel Margin="16,8,16,8">
+                            <TextBlock Text="Цена"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Margin="0,0,0,12"
+                                       VerticalAlignment="Center"/>
+                            <NumberBox Value="{Binding SelectedSupplierLayout.ColumnPrice, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <!-- Редактирование номера столбца для Множества (опционально) -->
+                        <StackPanel Margin="16,8,16,8">
+                            <TextBlock Text="Множество"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Margin="0,0,0,12"
+                                       VerticalAlignment="Center"/>
+                            <NumberBox Value="{Binding SelectedSupplierLayout.ColumnMultiple, Mode=TwoWay}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- (2) Нижняя панель с кнопкой сохранения изменений -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,16,16"
+                    Spacing="12">
+            <Button Content="Сохранить изменения" Click="SaveButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Page>

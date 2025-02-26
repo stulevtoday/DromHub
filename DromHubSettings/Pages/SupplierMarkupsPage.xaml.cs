@@ -6,67 +6,77 @@ using DromHubSettings.Serviсes;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System;
+using DromHubSettings.Dialogs;
+using DromHubSettings.ViewModels;
 
 namespace DromHubSettings.Pages
 {
     public sealed partial class SupplierMarkupsPage : Page
     {
-        public SupplierMarkupsViewModel ViewModel { get; } = new SupplierMarkupsViewModel();
-
         public SupplierMarkupsPage()
         {
             this.InitializeComponent();
-            this.DataContext = ViewModel;
+            this.Loaded += SupplierMarkupsPage_Loaded;
+
+            // Подписка на события успешного выполнения и ошибки для отображения уведомлений пользователю.
+            if (this.DataContext is SupplierViewModel vm)
+            {
+                vm.Succeeded += Vm_Succeeded;
+                vm.Fail += Vm_Fail;
+            }
         }
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        /// <summary>
+        /// Обработчик загрузки страницы. Загружает данные наценок поставщиков из базы.
+        /// </summary>
+        private async void SupplierMarkupsPage_Loaded(object sender, RoutedEventArgs e)
         {
-            base.OnNavigatedTo(e);
-            await ViewModel.LoadSupplierMarkupsAsync();
+            if (this.DataContext is SupplierMarkupViewModel vm)
+            {
+                await vm.LoadSupplierMarkupsAsync();
+            }
         }
 
+        /// <summary>
+        /// Отображает диалоговое окно об успешном выполнении операции.
+        /// </summary>
+        private async void Vm_Succeeded(object sender, string content)
+        {
+            var successDialog = new ContentDialog
+            {
+                Title = "Успешно",
+                Content = content,
+                CloseButtonText = "OK",
+                XamlRoot = this.XamlRoot
+            };
+            await successDialog.ShowAsync();
+        }
+
+        /// <summary>
+        /// Отображает диалоговое окно с сообщением об ошибке.
+        /// </summary>
+        private async void Vm_Fail(object sender, string content)
+        {
+            var errorDialog = new ContentDialog
+            {
+                Title = "Ошибка",
+                Content = "Ошибка: " + content,
+                CloseButtonText = "OK",
+                XamlRoot = this.XamlRoot
+            };
+            await errorDialog.ShowAsync();
+        }
+
+        /// <summary>
+        /// Обработчик кнопки "Сохранить изменения".
+        /// Сохраняет текущие изменения наценок поставщиков в базе и обновляет данные.
+        /// </summary>
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            try
+            if (this.DataContext is SupplierMarkupViewModel vm)
             {
-                // Предположим, что у вас есть DataService для работы с базой данных.
-                // Например, DataService.UpdateBrandMarkupsAsync принимает коллекцию обновлённых данных.
-                await DataService.SaveSupplierMarkupsAsync(ViewModel.SupplierMarkups);
-
-                var successDialog = new ContentDialog
-                {
-                    Title = "Сохранено",
-                    Content = "Данные успешно обновлены.",
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await successDialog.ShowAsync();
-            }
-            catch (Exception ex)
-            {
-                var errorDialog = new ContentDialog
-                {
-                    Title = "Ошибка при сохранении",
-                    Content = "Произошла ошибка: " + ex.Message,
-                    CloseButtonText = "OK",
-                    XamlRoot = this.XamlRoot
-                };
-                await errorDialog.ShowAsync();
-            }
-        }
-    }
-
-    public class SupplierMarkupsViewModel
-    {
-        public ObservableCollection<SupplierMarkup> SupplierMarkups { get; } = new ObservableCollection<SupplierMarkup>();
-
-        public async Task LoadSupplierMarkupsAsync()
-        {
-            var list = await DataService.GetSupplierMarkupsAsync();
-            SupplierMarkups.Clear();
-            foreach (var sm in list)
-            {
-                SupplierMarkups.Add(sm);
+                await vm.SaveSupplierMarkupsAsync();
+                await vm.LoadSupplierMarkupsAsync();
             }
         }
     }

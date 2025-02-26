@@ -9,12 +9,12 @@
     mc:Ignorable="d"
     Title="DromHubSettings">
 
-	<NavigationView x:Name="MainNavigationView" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" SelectionChanged="MainNavigationView_SelectionChanged">
+    <NavigationView x:Name="MainNavigationView" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" SelectionChanged="MainNavigationView_SelectionChanged" Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}">
 		<NavigationView.MenuItems>
 			<NavigationViewItem Content="Главная" Icon="Home" Tag="MainPage"/>
 			<NavigationViewItem Content="Наценки" Icon="Shop" Tag="SamplePage3">
 				<NavigationViewItem.MenuItems>
-                    <NavigationViewItem Content="по диапазону цен" Tag="PriceRangeMarkupsPage"/>
+                    <NavigationViewItem Content="по диапазону цен" Tag="RangeMarkupsPage"/>
 					<NavigationViewItem Content="по бренду" Tag="BrandMarkupsPage"/>
 					<NavigationViewItem Content="по поставщикам" Tag="SupplierMarkupsPage"/>
 				</NavigationViewItem.MenuItems>
@@ -24,11 +24,11 @@
             <NavigationViewItem Content="Локальности" Icon="People" Tag="LocalitiesPage"/>
 			<NavigationViewItem Content="Почта" Icon="Mail" Tag="SamplePage4">
 				<NavigationViewItem.MenuItems>
-					<NavigationViewItem Content="Mail" Tag="MailSettingsPage"/>
+                    <NavigationViewItem Content="Mail" Tag="EmailAuthenticationPage"/>
                     <NavigationViewItem Content="Calendar" Tag="ExportLayoutPage"/>
 				</NavigationViewItem.MenuItems>
 			</NavigationViewItem>
-			<NavigationViewItem Content="Парсер" Icon="Globe" Tag="SamplePage4">
+            <NavigationViewItem Content="Парсер" Icon="Globe" Tag="ExportDefinitionPage">
 				<NavigationViewItem.MenuItems>
 					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>
 					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>

@@ -1,174 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="DromHubSettings.Pages.SuppliersPage"
     x:Name="pageRoot"
-    DataContext="{x:Bind ViewModel}"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:DromHubSettings.Pages"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="using:DromHubSettings.Models"
+    xmlns:vm="using:DromHubSettings.ViewModels"
     xmlns:dialogs="using:DromHubSettings.Dialogs"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    xmlns:models="using:DromHubSettings.Models"
+    xmlns:helpers="using:DromHubSettings.Helpers"
+    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">
+
+    <Page.DataContext>
+        <vm:SupplierViewModel/>
+    </Page.DataContext>
+
+    <Page.Resources>
+        <!-- Сгруппированные данные поставщиков -->
+        <CollectionViewSource x:Key="GroupedSuppliers"
+                              Source="{Binding GroupedSuppliers}"
+                              IsSourceGrouped="True"/>
+    </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <!-- Заголовок и описание -->
             <RowDefinition Height="Auto"/>
-            <!-- Шапка таблицы (одна строка) -->
-            <RowDefinition Height="Auto"/>
-            <!-- Список поставщиков -->
             <RowDefinition Height="*"/>
-            <!-- Кнопки внизу -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Блок с общим заголовком страницы -->
+        <!-- Заголовок страницы и описание -->
         <StackPanel Grid.Row="0">
-            <TextBlock Text="Поставщики" 
-                       Style="{StaticResource TitleTextBlockStyle}"
-                       Margin="36,24,36,0"/>
-            <TextBlock Text="Управляйте информацией о поставщиках. Изменяйте название, почту, локальность и индекс."
-                       Style="{ThemeResource BodyTextBlockStyle}"
-                       Margin="36,8,36,16"/>
+            <TextBlock Text="Поставщики"
+                       Margin="36,32,36,16"
+                       Style="{StaticResource TitleTextBlockStyle}"/>
+            <TextBlock Text="Управляйте данными поставщиков. Выберите поставщика из списка слева для редактирования или удаления его данных. Используйте форму справа для внесения изменений."
+                       Margin="36,0,36,20"
+                       Style="{ThemeResource BodyTextBlockStyle}"/>
         </StackPanel>
 
-        <!-- Шапка столбцов -->
-        <Grid Grid.Row="1"
-              Margin="48,0,48,8"
-              Padding="8"
-              ColumnSpacing="24">
+        <Grid Grid.Row="1" Margin="36,0,36,24">
             <Grid.ColumnDefinitions>
-                <!-- Те же самые столбцы, что в ItemTemplate -->
-                <ColumnDefinition Width="1.5*"/>
-                <!-- Название -->
-                <ColumnDefinition Width="1.5*"/>
-                <!-- Почта -->
+                <!-- Список поставщиков -->
+                <ColumnDefinition Width="0.5*"/>
+                <!-- Форма редактирования поставщика -->
                 <ColumnDefinition Width="*"/>
-                <!-- Локальность -->
-                <ColumnDefinition Width="0.4*"/>
-                <!-- Индекс -->
-                <ColumnDefinition Width="0.4*"/>
-                <!-- Под кнопку отключения -->
-                <ColumnDefinition Width="0.4*"/>
-                <!-- Под кнопку удаления -->
             </Grid.ColumnDefinitions>
-            
-            <!-- Заголовки для каждого столбца -->
-            <TextBlock Grid.Column="0"
-                       Text="Название"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="1"
-                       Text="Почта"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="2"
-                       Text="Локальность"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="3"
-                       Text="Индекс"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="4"
-                       Text="Статус"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="5"
-                       Text="Удалить"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <!-- Пустая ячейка для кнопки удаления (Grid.Column="4") -->
+            <!-- Список поставщиков с группировкой -->
+            <ListView Grid.Column="0"
+                      x:Name="SuppliersListView"
+                      ItemsSource="{Binding Source={StaticResource GroupedSuppliers}}"
+                      SelectedItem="{Binding SelectedSupplier, Mode=TwoWay}"
+                      SelectionMode="Single"
+                      Margin="0,0,16,0"
+                      BorderThickness="1"
+                      BorderBrush="Gray"
+                      CornerRadius="4">
+                <!-- Заголовки групп -->
+                <ListView.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Key}"
+                                           Style="{StaticResource TitleTextBlockStyle}"
+                                           AutomationProperties.AccessibilityView="Raw"/>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </ListView.GroupStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Supplier">
+                        <Grid Padding="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- Левая часть: информация о поставщике -->
+                            <Grid Grid.Column="0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <!-- Название поставщика -->
+                                <TextBlock Text="{x:Bind Name}"
+                                           Style="{StaticResource BodyStrongTextBlockStyle}"
+                                           Grid.Row="0"
+                                           HorizontalAlignment="Left"
+                                           Margin="0,0,0,4"/>
+                                <!-- Электронная почта поставщика -->
+                                <TextBlock Text="{x:Bind Email}"
+                                           Style="{StaticResource BodyTextBlockStyle}"
+                                           Grid.Row="1"
+                                           HorizontalAlignment="Left"/>
+                            </Grid>
+                            <!-- Правая часть: статус поставщика -->
+                            <TextBlock Text="{x:Bind IsActive}"
+                                       Style="{StaticResource BodyTextBlockStyle}"
+                                       Grid.Column="1"
+                                       VerticalAlignment="Center"
+                                       Margin="12,0,0,0"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!-- Форма редактирования выбранного поставщика -->
+            <Grid Grid.Column="1"
+                  BorderThickness="1"
+                  BorderBrush="Gray"
+                  CornerRadius="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <!-- Заголовок формы редактирования -->
+                <StackPanel Grid.Row="0" Margin="16,8,16,8">
+                    <TextBlock Text="Редактирование данных поставщика"
+                               Margin="0,0,0,8"
+                               Style="{StaticResource TitleTextBlockStyle}"/>
+                    <Border BorderBrush="LightGray"
+                            BorderThickness="0,1,0,0"
+                            Margin="0,0,0,4"/>
+                </StackPanel>
+                <!-- Редактирование названия поставщика -->
+                <StackPanel Grid.Row="1" Margin="16,0,16,16">
+                    <TextBlock Text="Название поставщика"
+                               Margin="0,0,0,12"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedSupplier.Name, Mode=TwoWay}"
+                             PlaceholderText="Введите новое имя поставщика"/>
+                </StackPanel>
+                <!-- Редактирование электронной почты поставщика -->
+                <StackPanel Grid.Row="2" Margin="16,8,16,8">
+                    <TextBlock Text="Электронная почта"
+                               Margin="0,0,0,12"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedSupplier.Email, Mode=TwoWay}"
+                             PlaceholderText="Введите новый адрес электронной почты"/>
+                </StackPanel>
+                <!-- Отображение локальности поставщика (только для чтения) -->
+                <StackPanel Grid.Row="3" Margin="16,8,16,8">
+                    <TextBlock Text="Локальность"
+                               Margin="0,0,0,12"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedSupplier.LocalityName, Mode=TwoWay}"
+                             IsReadOnly="True"/>
+                </StackPanel>
+                <!-- Редактирование индекса поставщика -->
+                <StackPanel Grid.Row="4" Margin="16,8,16,8">
+                    <TextBlock Text="Индекс поставщика"
+                               Margin="0,0,0,12"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"
+                               VerticalAlignment="Center"/>
+                    <NumberBox Value="{Binding SelectedSupplier.Index, Mode=TwoWay}"/>
+                </StackPanel>
+                <!-- Редактирование статуса поставщика -->
+                <StackPanel Grid.Row="5" Margin="16,8,16,8">
+                    <TextBlock Text="Статус поставщика"
+                               Margin="0,0,0,12"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"
+                               VerticalAlignment="Center"/>
+                    <ToggleSwitch IsOn="{Binding SelectedSupplier.IsActive, Mode=TwoWay}"/>
+                </StackPanel>
+                <!-- Кнопка удаления поставщика -->
+                <Button Grid.Row="7"
+                        Content="Удалить поставщика"
+                        HorizontalAlignment="Right"
+                        Margin="16,8,16,8"
+                        Command="{Binding DeleteCommand}"
+                        CommandParameter="{Binding SelectedSupplier}"/>
+            </Grid>
         </Grid>
 
-        <!-- Список поставщиков (ListView сам умеет прокручивать) -->
-        <ListView Grid.Row="2"
-                  x:Name="SuppliersListView"
-                  Margin="36,0,36,0"
-                  ItemsSource="{x:Bind ViewModel.Suppliers, Mode=OneWay}"
-                  SelectionMode="None"
-                  HorizontalContentAlignment="Stretch">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="models:Supplier">
-                    <Border Background="{ThemeResource SystemControlBackgroundAltMediumBrush}"
-                            CornerRadius="4"
-                            Margin="0,0,0,8">
-                        <Grid Padding="8" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions>
-                                <!-- Та же самая сетка, что в шапке -->
-                                <ColumnDefinition Width="1.5*"/>
-                                <ColumnDefinition Width="1.5*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="0.4*"/>
-                                <!-- Индекс -->
-                                <ColumnDefinition Width="0.4*"/>
-                                <ColumnDefinition Width="0.4*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Название (убрали Header, используем PlaceholderText) -->
-                            <TextBox Grid.Column="0"
-                                     Text="{x:Bind Name, Mode=TwoWay}"
-                                     PlaceholderText="Введите название"
-                                     VerticalAlignment="Center"/>
-
-                            <!-- Почта -->
-                            <TextBox Grid.Column="1"
-                                     Text="{x:Bind Email, Mode=TwoWay}"
-                                     PlaceholderText="Введите почту"
-                                     VerticalAlignment="Center"/>
-
-                            <!-- Локальность -->
-                            <TextBox Grid.Column="2"
-                                     Text="{x:Bind LocalityName, Mode=TwoWay}"
-                                     IsReadOnly="True"
-                                     PlaceholderText="Введите локальность"
-                                     VerticalAlignment="Center"/>
-
-
-                            <!-- Индекс -->
-                            <NumberBox Grid.Column="3"
-                                       Value="{x:Bind Index, Mode=TwoWay}"
-                                       Minimum="0"
-                                       SmallChange="1"
-                                       LargeChange="1"
-                                       PlaceholderText="Индекс"
-                                       VerticalAlignment="Center"
-                                       HorizontalAlignment="Stretch"/>
-
-                            <ToggleSwitch Grid.Column="4"
-                                          IsOn="{x:Bind IsActive, Mode=TwoWay}"/>
-
-                            <!-- Кнопка удаления -->
-                            <Button Grid.Column="5"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Center"
-                                    Click="DeleteButton_Click">
-                                <SymbolIcon Symbol="Delete"/>
-                            </Button>
-
-                            
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-
-        <!-- Кнопки добавления/сохранения внизу -->
-        <StackPanel Grid.Row="3"
+        <!-- Нижняя панель с кнопками действий -->
+        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,16,16,16"
-                    Spacing="12">
-            <Button Content="Добавить поставщика" Click="AddButton_Click"/>
-            <Button Content="Сохранить изменения" Click="SaveButton_Click"/>
+                    Margin="16"
+                    Spacing="12"
+                    HorizontalAlignment="Right">
+            <Button Content="Добавить нового поставщика"
+                    Click="AddButton_Click"/>
+            <Button Content="Сохранить изменения"
+                    Click="SaveButton_Click"/>
         </StackPanel>
     </Grid>
 </Page>

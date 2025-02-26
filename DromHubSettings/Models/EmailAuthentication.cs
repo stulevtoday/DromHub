@@ -2,7 +2,7 @@
 
 namespace DromHubSettings.Models
 {
-    public class MailSettings
+    public class EmailAuthentication
     {
         public Guid Id { get; set; }
         public string DownloadEmail { get; set; }

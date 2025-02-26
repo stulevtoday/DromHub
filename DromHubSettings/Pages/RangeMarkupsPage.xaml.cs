@@ -1,28 +1,28 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using System;
+using System.Threading.Tasks;
+using DromHubSettings.ViewModels;
 using DromHubSettings.Models;
 using DromHubSettings.Serviсes;
 using DromHubSettings.Dialogs;
-using DromHubSettings.ViewModels;
 
 namespace DromHubSettings.Pages
 {
     /// <summary>
-    /// Страница управления локальностями.
-    /// Здесь пользователь может просматривать, добавлять, редактировать и удалять данные локальностей.
+    /// Страница управления диапазонами цен.
+    /// Здесь можно просматривать, добавлять, редактировать и удалять диапазоны цен и соответствующую наценку.
     /// </summary>
-    public sealed partial class LocalitiesPage : Page
+    public sealed partial class RangeMarkupsPage : Page
     {
-        public LocalitiesPage()
+        public RangeMarkupsPage()
         {
             this.InitializeComponent();
-            this.Loaded += LocalitiesPage_Loaded;
+            this.Loaded += RangeMarkupsPage_Loaded;
 
             // Подписка на события успешного выполнения и ошибки для отображения уведомлений пользователю.
-            if (this.DataContext is LocalityViewModel vm)
+            if (this.DataContext is RangeMarkupViewModel vm)
             {
                 vm.Succeeded += Vm_Succeeded;
                 vm.Fail += Vm_Fail;
@@ -30,19 +30,20 @@ namespace DromHubSettings.Pages
         }
 
         /// <summary>
-        /// Обработчик загрузки страницы.
-        /// Загружает данные локальностей из базы данных.
+        /// Обработчик события загрузки страницы.
+        /// Загружает диапазоны цен из базы данных при инициализации страницы.
         /// </summary>
-        private async void LocalitiesPage_Loaded(object sender, RoutedEventArgs e)
+        private async void RangeMarkupsPage_Loaded(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is LocalityViewModel vm)
+            if (this.DataContext is RangeMarkupViewModel vm)
             {
-                await vm.LoadLocalitiesAsync();
+                await vm.LoadRangeMarkupsAsync();
             }
         }
 
         /// <summary>
-        /// Отображает диалоговое окно об успешном выполнении операции.
+        /// Обработчик события успешного выполнения операции.
+        /// Отображает диалоговое окно с сообщением об успехе.
         /// </summary>
         private async void Vm_Succeeded(object sender, string content)
         {
@@ -57,6 +58,7 @@ namespace DromHubSettings.Pages
         }
 
         /// <summary>
+        /// Обработчик события ошибки.
         /// Отображает диалоговое окно с сообщением об ошибке.
         /// </summary>
         private async void Vm_Fail(object sender, string content)
@@ -72,44 +74,43 @@ namespace DromHubSettings.Pages
         }
 
         /// <summary>
-        /// Обработчик кнопки "Добавить локальность".
-        /// Открывает диалоговое окно для ввода данных новой локальности,
-        /// затем добавляет её в коллекцию и сохраняет в базе.
+        /// Обработчик кнопки "Добавить диапазон".
+        /// Открывает диалог для ввода нового диапазона цен, затем добавляет его в коллекцию и сохраняет в базу.
         /// </summary>
         private async void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new AddLocalityDialog();
+            var dialog = new AddRangeMarkupDialog();
             dialog.XamlRoot = this.XamlRoot;
             var result = await dialog.ShowAsync();
 
             if (result == ContentDialogResult.Primary)
             {
-                var newLocality = new Locality
+                var newRangeMarkup = new RangeMarkup
                 {
                     Id = Guid.NewGuid(),
-                    Name = dialog.Name,
-                    Email = dialog.Email,
-                    DeliveryTime = dialog.DeliveryTime
+                    MinPrice = dialog.MinPrice,
+                    MaxPrice = dialog.MaxPrice,
+                    Markup = dialog.Markup
                 };
 
-                if (this.DataContext is LocalityViewModel vm)
+                if (this.DataContext is RangeMarkupViewModel vm)
                 {
-                    vm.Localities.Add(newLocality);
-                    await DataService.AddLocalityAsync(newLocality);
+                    vm.RangeMarkups.Add(newRangeMarkup);
+                    await DataService.AddRangeMarkupAsync(newRangeMarkup);
                 }
             }
         }
 
         /// <summary>
         /// Обработчик кнопки "Сохранить изменения".
-        /// Сохраняет текущие изменения локальностей в базе данных и обновляет данные.
+        /// Сохраняет текущие диапазоны цен в базе данных и обновляет список.
         /// </summary>
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is LocalityViewModel vm)
+            if (this.DataContext is RangeMarkupViewModel vm)
             {
-                await vm.SaveLocalitiesAsync();
-                await vm.LoadLocalitiesAsync();
+                await vm.SaveRangeMarkupsAsync();
+                await vm.LoadRangeMarkupsAsync();
             }
         }
     }

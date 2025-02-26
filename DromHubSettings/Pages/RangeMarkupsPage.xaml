@@ -1,76 +1,54 @@
 <Page
-    x:Class="DromHubSettings.Pages.PriceRangeMarkupsPage"
+    x:Class="DromHubSettings.Pages.RangeMarkupsPage"
+    x:Name="pageRoot"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:DromHubSettings.Pages"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:DromHubSettings.ViewModels"
     xmlns:models="using:DromHubSettings.Models"
-    xmlns:dialogs="using:DromHubSettings.Dialogs"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">
+
+    <Page.DataContext>
+        <vm:RangeMarkupViewModel/>
+    </Page.DataContext>
 
     <Grid>
         <Grid.RowDefinitions>
-            <!-- (0) Заголовок и описание страницы -->
+            <!-- (0) Заголовок и описание -->
             <RowDefinition Height="Auto"/>
             <!-- (1) Шапка столбцов -->
             <RowDefinition Height="Auto"/>
-            <!-- (2) Список диапазонов -->
+            <!-- (2) Список диапазонов (табличное представление) -->
             <RowDefinition Height="*"/>
-            <!-- (3) Кнопки внизу -->
+            <!-- (3) Нижняя панель с кнопками -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- (0) Заголовочная область -->
         <StackPanel Grid.Row="0">
-            <TextBlock x:Name="PageHeader"
-                       Text="Наценки по диапазону цен"
-                       Margin="36,24,36,0"
+            <TextBlock Text="Наценки > Диапазон цен"
+                       Margin="36,32,36,16"
                        Style="{StaticResource TitleTextBlockStyle}"/>
-            <TextBlock x:Name="PageDescription"
-                       Margin="36,8,36,16"
-                       Style="{ThemeResource BodyTextBlockStyle}"
-                       Text="На этой странице вы можете управлять коэфициентом наценки для различных диапазонов цен. Для каждого диапазона укажите минимальное и максимальное значение цен, а также процент наценки."/>
+            <TextBlock Text="Управляйте диапазонами цен. Для каждого диапазона укажите минимальное и максимальное значение цен, а также коэффициент наценки."
+                       Margin="36,0,36,20"
+                       Style="{ThemeResource BodyTextBlockStyle}"/>
         </StackPanel>
 
         <!-- (1) Шапка столбцов -->
         <Grid Grid.Row="1"
-              Margin="48,0,48,8"
+              Margin="48,0,56,8"
               Padding="8"
-              ColumnSpacing="24">
+              ColumnSpacing="16">
             <Grid.ColumnDefinitions>
-                <!-- Соответствует структуре в ItemTemplate -->
-                <!-- "от" (Label), Минимальная цена, "до" (Label), Максимальная цена, Наценка, Кнопка -->
                 <ColumnDefinition Width="0.3*"/>
-                <!-- Лейбл "от" -->
                 <ColumnDefinition Width="1.5*"/>
-                <!-- Минимальная цена -->
                 <ColumnDefinition Width="0.3*"/>
-                <!-- Лейбл "до" -->
                 <ColumnDefinition Width="1.5*"/>
-                <!-- Максимальная цена -->
-                <ColumnDefinition Width="*"   />
-                <!-- Наценка -->
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="0.4*"/>
-                <!-- Удаление -->
             </Grid.ColumnDefinitions>
 
-            <!-- Шапка (названия столбцов) -->
-            <!-- Обычно "от"/"до" — это просто метки, 
-                 но если хотите единый стиль, можно писать "Мин. цена", "Макс. цена" и т.д. -->
-            <TextBlock Grid.Column="0"
-                       Text=""
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"/>
-            <TextBlock Grid.Column="1"
+                <TextBlock Grid.Column="1"
                        Text="Мин. цена"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"/>
-            <TextBlock Grid.Column="2"
-                       Text=""
                        Style="{StaticResource BodyStrongTextBlockStyle}"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
@@ -80,7 +58,7 @@
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
             <TextBlock Grid.Column="4"
-                       Text="Коэфициент наценки (1,xx)"
+                       Text="Коэффициент (1,xx)"
                        Style="{StaticResource BodyStrongTextBlockStyle}"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
@@ -91,34 +69,29 @@
                        VerticalAlignment="Center"/>
         </Grid>
 
-        <!-- (2) Список диапазонов (ListView сам умеет прокручивать) -->
+        <!-- (2) Табличный список диапазонов -->
         <ListView Grid.Row="2"
-                  x:Name="PriceRangeListView"
+                  x:Name="RangeMarkupsListView"
                   Margin="36,0,36,0"
-                  ItemsSource="{x:Bind ViewModel.PriceRangeMarkups, Mode=OneWay}"
+                  ItemsSource="{Binding RangeMarkups}"
                   SelectionMode="None"
-                  HorizontalContentAlignment="Stretch">
+                  HorizontalContentAlignment="Stretch"
+                  BorderThickness="1"
+                  BorderBrush="Gray"
+                  CornerRadius="4">
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="models:PriceRangeMarkup">
-                    <!-- Оборачиваем элемент в Border для разделения -->
-                    <Border Background="{ThemeResource SystemControlBackgroundAltMediumBrush}"
+                <DataTemplate x:DataType="models:RangeMarkup">
+                    <Border Background="{ThemeResource AcrylicBackgroundFillColorBaseBrush}"
                             CornerRadius="4"
-                            Margin="0,0,0,8">
+                            Margin="8">
                         <Grid Padding="8" ColumnSpacing="16">
                             <Grid.ColumnDefinitions>
-                                <!-- Та же самая структура, что в шапке -->
                                 <ColumnDefinition Width="0.3*"/>
-                                <!-- Лейбл "от" (не поле ввода) -->
                                 <ColumnDefinition Width="1.5*"/>
-                                <!-- Минимальная цена -->
                                 <ColumnDefinition Width="0.3*"/>
-                                <!-- Лейбл "до" -->
                                 <ColumnDefinition Width="1.5*"/>
-                                <!-- Максимальная цена -->
-                                <ColumnDefinition Width="*"   />
-                                <!-- Наценка -->
+                                <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="0.4*"/>
-                                <!-- Кнопка удаления -->
                             </Grid.ColumnDefinitions>
 
                             <!-- Лейбл "от" -->
@@ -155,14 +128,14 @@
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Stretch"/>
 
-                            <!-- Поле ввода наценки -->
+                            <!-- Поле ввода коэффициента наценки -->
                             <NumberBox Grid.Column="4"
                                        Value="{x:Bind Markup, Mode=TwoWay}"
                                        Minimum="1"
                                        Maximum="10"
                                        SmallChange="0.01"
                                        LargeChange="0.05"
-                                       PlaceholderText="Коэфициент наценки"
+                                       PlaceholderText="Коэффициент"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Stretch"/>
 
@@ -170,7 +143,8 @@
                             <Button Grid.Column="5"
                                     VerticalAlignment="Center"
                                     HorizontalAlignment="Center"
-                                    Click="DeleteButton_Click">
+                                    Command="{Binding DataContext.DeleteCommand, ElementName=pageRoot}"
+                                    CommandParameter="{x:Bind}">
                                 <SymbolIcon Symbol="Delete"/>
                             </Button>
                         </Grid>
@@ -179,14 +153,16 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <!-- (3) Кнопки снизу -->
+        <!-- (3) Нижняя панель с кнопками действий -->
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0,16,16,16"
                     Spacing="12">
-            <Button Content="Добавить новый диапазон" Click="AddButton_Click"/>
-            <Button Content="Сохранить изменения" Click="SaveButton_Click"/>
+            <Button Content="Добавить новый диапазон"
+                    Click="AddButton_Click"/>
+            <Button Content="Сохранить изменения"
+                    Click="SaveButton_Click"/>
         </StackPanel>
     </Grid>
 </Page>

@@ -18,9 +18,9 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace DromHubSettings.Dialogs
 {
-    public sealed partial class AddPriceRangeDialog : ContentDialog
+    public sealed partial class AddRangeMarkupDialog : ContentDialog
     {
-        public AddPriceRangeDialog()
+        public AddRangeMarkupDialog()
         {
             this.InitializeComponent();
         }

@@ -1,127 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="DromHubSettings.Pages.LocalitiesPage"
+    x:Name="pageRoot"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:DromHubSettings.Pages"
-    xmlns:models="using:DromHubSettings.Models"
+    xmlns:vm="using:DromHubSettings.ViewModels"
     xmlns:dialogs="using:DromHubSettings.Dialogs"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    xmlns:models="using:DromHubSettings.Models"
+    xmlns:helpers="using:DromHubSettings.Helpers"
+    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">
+
+    <!-- Устанавливаем DataContext как LocalityViewModel -->
+    <Page.DataContext>
+        <vm:LocalityViewModel/>
+    </Page.DataContext>
+
+    <Page.Resources>
+        <!-- Ресурс для группировки локальностей (например, по первой букве названия) -->
+        <CollectionViewSource x:Key="GroupedLocalities"
+                              Source="{Binding GroupedLocalities}"
+                              IsSourceGrouped="True"/>
+    </Page.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
             <!-- (0) Заголовок и описание страницы -->
             <RowDefinition Height="Auto"/>
-            <!-- (1) Шапка таблицы -->
-            <RowDefinition Height="Auto"/>
-            <!-- (2) Список локальностей -->
+            <!-- (1) Основное содержимое: список локальностей и форма редактирования -->
             <RowDefinition Height="*"/>
-            <!-- (3) Кнопки внизу страницы -->
+            <!-- (2) Панель с кнопками действий -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- (0) Заголовок и описание -->
+        <!-- (0) Заголовок страницы и описание -->
         <StackPanel Grid.Row="0">
-            <TextBlock Text="Локальности" 
-                       Margin="36,24,36,0"
+            <TextBlock Text="Локальности"
+                       Margin="36,32,36,16"
                        Style="{StaticResource TitleTextBlockStyle}"/>
-            <TextBlock Text="Управляйте списком локальностей и сроками доставки."
-                       Margin="36,8,36,16"
+            <TextBlock Text="Управляйте данными локальностей. Выберите локальность из списка слева для редактирования или удаления её данных. Используйте форму справа для внесения изменений."
+                       Margin="36,0,36,20"
                        Style="{ThemeResource BodyTextBlockStyle}"/>
         </StackPanel>
 
-        <!-- (1) Шапка столбцов -->
-        <Grid Grid.Row="1" Margin="48,0,48,8" Padding="8" ColumnSpacing="24">
+        <!-- (1) Основное содержимое -->
+        <Grid Grid.Row="1" Margin="36,0,36,24">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <!-- Название -->
+                <!-- Левая колонка: список локальностей -->
                 <ColumnDefinition Width="0.5*"/>
-                <!-- Срок доставки -->
+                <!-- Правая колонка: форма редактирования выбранной локальности -->
                 <ColumnDefinition Width="*"/>
-                <!-- Почта для выгрузки -->
-                <ColumnDefinition Width="0.2*"/>
-                <!-- Удалить -->
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0"
-                       Text="Название"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="1"
-                       Text="Срок доставки (дней)"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="2"
-                       Text="Почта для выгрузки"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <TextBlock Grid.Column="3"
-                       Text="Удалить"
-                       Style="{StaticResource BodyStrongTextBlockStyle}"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-        </Grid>
 
-        <!-- (2) Список локальностей -->
-        <ListView Grid.Row="2"
-                  x:Name="LocalitiesListView"
-                  Margin="36,0,36,0"
-                  ItemsSource="{x:Bind ViewModel.Localities, Mode=OneWay}"
-                  SelectionMode="None"
-                  HorizontalContentAlignment="Stretch">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="models:LocalityOption">
-                    <Border Background="{ThemeResource SystemControlBackgroundAltMediumBrush}"
-                            CornerRadius="4"
-                            Margin="0,0,0,8">
-                        <Grid Padding="8" ColumnSpacing="16">
+            <!-- Список локальностей с группировкой -->
+            <ListView Grid.Column="0"
+                      x:Name="LocalitiesListView"
+                      ItemsSource="{Binding Source={StaticResource GroupedLocalities}}"
+                      SelectedItem="{Binding SelectedLocality, Mode=TwoWay}"
+                      SelectionMode="Single"
+                      Margin="0,0,16,0"
+                      BorderThickness="1"
+                      BorderBrush="Gray"
+                      CornerRadius="4">
+                <!-- Группировка: заголовок группы отображает ключ (например, первая буква названия) -->
+                <ListView.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Key}"
+                                           Style="{StaticResource TitleTextBlockStyle}"
+                                           AutomationProperties.AccessibilityView="Raw"/>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </ListView.GroupStyle>
+                <!-- Каждый элемент списка отображает название локальности и, например, время доставки -->
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Locality">
+                        <Grid Padding="12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="0.5*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="0.2*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-
-                            <!-- Название локальности -->
-                            <TextBox Grid.Column="0"
-                                     Text="{x:Bind Name, Mode=TwoWay}"
-                                     PlaceholderText="Введите название"
-                                     VerticalAlignment="Center"/>
-
-                            <!-- Срок доставки (в днях) -->
-                            <NumberBox Grid.Column="1"
-                                       Value="{x:Bind DeliveryTime, Mode=TwoWay}"
-                                       Minimum="0"
-                                       SmallChange="1"
-                                       LargeChange="1"
-                                       PlaceholderText="Срок доставки"
+                            <!-- Имя локальности -->
+                            <TextBlock Text="{x:Bind Name}"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Grid.Column="0"
+                                       Margin="0,0,0,4"
+                                       HorizontalAlignment="Left"/>
+                            <!-- Время доставки (или другой показатель) -->
+                            <TextBlock Text="{x:Bind DeliveryTime}"
+                                       Style="{StaticResource BodyTextBlockStyle}"
+                                       Grid.Column="1"
                                        VerticalAlignment="Center"
-                                       HorizontalAlignment="Stretch"/>
-
-                            <!-- Почта для выгрузки -->
-                            <TextBox Grid.Column="2"
-                                     Text="{x:Bind ExportEmail, Mode=TwoWay}"
-                                     PlaceholderText="Введите почту для выгрузки"
-                                     VerticalAlignment="Center"/>
-
-                            <!-- Кнопка удаления локальности -->
-                            <Button Grid.Column="3"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Center"
-                                    Click="DeleteButton_Click">
-                                <SymbolIcon Symbol="Delete"/>
-                            </Button>
+                                       Margin="12,0,0,0"/>
                         </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
 
-        <!-- (3) Кнопки добавления/сохранения -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,16,16" Spacing="12">
-            <Button Content="Добавить локальность" Click="AddButton_Click"/>
-            <Button Content="Сохранить изменения" Click="SaveButton_Click"/>
+            <!-- Форма редактирования выбранной локальности -->
+            <Grid Grid.Column="1"
+                  BorderThickness="1"
+                  BorderBrush="Gray"
+                  CornerRadius="4">
+                <Grid.RowDefinitions>
+                    <!-- (0) Заголовок формы -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- (1) Поле редактирования названия локальности -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- (2) Поле редактирования адреса электронной почты для экспорта -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- (3) Поле редактирования времени доставки -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- (4) Дополнительное пространство (если нужно) -->
+                    <RowDefinition Height="*"/>
+                    <!-- (5) Панель с кнопкой удаления -->
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <!-- Заголовок формы редактирования -->
+                <StackPanel Grid.Row="0" Margin="16,8,16,8">
+                    <TextBlock Text="Редактирование данных локальности"
+                               Margin="0,0,0,8"
+                               Style="{StaticResource TitleTextBlockStyle}"/>
+                    <Border BorderBrush="LightGray"
+                            BorderThickness="0,1,0,0"
+                            Margin="0,0,0,4"/>
+                </StackPanel>
+                <!-- Поле редактирования названия локальности -->
+                <StackPanel Grid.Row="1" Margin="16,0,16,16">
+                    <TextBlock Text="Название локальности"
+                               Margin="0,0,0,12"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedLocality.Name, Mode=TwoWay}"
+                             PlaceholderText="Введите новое название локальности"/>
+                </StackPanel>
+                <!-- Поле редактирования электронной почты для экспорта -->
+                <StackPanel Grid.Row="2" Margin="16,8,16,8">
+                    <TextBlock Text="Электронная почта экспорта"
+                               Margin="0,0,0,12"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"
+                               VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding SelectedLocality.Email, Mode=TwoWay}"
+                             PlaceholderText="Введите новый адрес электронной почты для экспорта"/>
+                </StackPanel>
+                <!-- Поле редактирования времени доставки -->
+                <StackPanel Grid.Row="3" Margin="16,8,16,8">
+                    <TextBlock Text="Время доставки"
+                               Margin="0,0,0,12"
+                               Style="{StaticResource BodyStrongTextBlockStyle}"
+                               VerticalAlignment="Center"/>
+                    <NumberBox Value="{Binding SelectedLocality.DeliveryTime, Mode=TwoWay}"/>
+                </StackPanel>
+                <!-- Панель с кнопкой удаления локальности -->
+                <Button Grid.Row="5"
+                        Content="Удалить локальность"
+                        HorizontalAlignment="Right"
+                        Margin="16,8,16,8"
+                        Command="{Binding DeleteCommand}"
+                        CommandParameter="{Binding SelectedLocality}"/>
+            </Grid>
+        </Grid>
+
+        <!-- (2) Нижняя панель с кнопками действий -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    Margin="16"
+                    Spacing="12"
+                    HorizontalAlignment="Right">
+            <Button Content="Добавить новую локальность"
+                    Click="AddButton_Click"/>
+            <Button Content="Сохранить изменения"
+                    Click="SaveButton_Click"/>
         </StackPanel>
     </Grid>
 </Page>

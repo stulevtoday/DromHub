@@ -13,7 +13,10 @@ using System.Collections.Generic;
 
 namespace DromHubSettings.ViewModels
 {
-    // Класс группы для BrandMarkup
+    /// <summary>
+    /// Группа наценок для брендов, сгруппированная по первой букве названия бренда.
+    /// Заголовок группы формируется на основе свойства GroupKey.
+    /// </summary>
     public class BrandMarkupGroup : ObservableCollection<BrandMarkup>
     {
         public string Key { get; }
@@ -24,12 +27,21 @@ namespace DromHubSettings.ViewModels
         }
     }
 
-    public class MarkupPageViewModel : INotifyPropertyChanged
+    /// <summary>
+    /// ViewModel для управления наценками по брендам.
+    /// Предоставляет коллекцию наценок, реализует группировку по первой букве названия бренда,
+    /// а также команды для загрузки, сохранения и удаления данных.
+    /// </summary>
+    public class BrandMarkupViewModel : INotifyPropertyChanged
     {
-        // Коллекция наценок по брендам
+        /// <summary>
+        /// Коллекция наценок по брендам.
+        /// </summary>
         public ObservableCollection<BrandMarkup> BrandMarkups { get; } = new ObservableCollection<BrandMarkup>();
 
-        // Свойство, возвращающее сгруппированные наценки (группировка по первой букве BrandName)
+        /// <summary>
+        /// Наценки, сгруппированные по первой букве названия бренда.
+        /// </summary>
         public IEnumerable<BrandMarkupGroup> GroupedBrandMarkups
         {
             get
@@ -42,39 +54,41 @@ namespace DromHubSettings.ViewModels
             }
         }
 
-        private BrandMarkup _selectedMarkup;
-        // Текущий выбранный для редактирования элемент
-        public BrandMarkup SelectedMarkup
+        private BrandMarkup _selectedBrandMarkup;
+        /// <summary>
+        /// Выбранная наценка для редактирования.
+        /// </summary>
+        public BrandMarkup SelectedBrandMarkup
         {
-            get => _selectedMarkup;
-            set { _selectedMarkup = value; OnPropertyChanged(); }
+            get => _selectedBrandMarkup;
+            set { _selectedBrandMarkup = value; OnPropertyChanged(); }
         }
 
-        // События для уведомления View о результате
+        // События для уведомления View о результате операций (успех или ошибка).
         public event EventHandler<string> Succeeded;
         public event EventHandler<string> Fail;
 
-        // Асинхронные команды
+        // Асинхронные команды для работы с данными наценок.
         public RelayCommand DeleteCommand { get; }
         public RelayCommand SaveCommand { get; }
         public RelayCommand LoadCommand { get; }
-        public RelayCommand EditCommand { get; }
 
-        public MarkupPageViewModel()
+        public BrandMarkupViewModel()
         {
-            // Подписка на изменение коллекции, чтобы обновлять группировку при любых изменениях
+            // При изменении коллекции наценок обновляем группировку.
             BrandMarkups.CollectionChanged += (s, e) => OnPropertyChanged(nameof(GroupedBrandMarkups));
 
-            // Команда на удаление: принимает текущий объект BrandMarkup
+            // Инициализация команд:
+            // Команда удаления удаляет выбранную наценку.
             DeleteCommand = new RelayCommand(async param => await DeleteBrandMarkupAsync(param));
-            // Команда на сохранение изменений
+            // Команда сохранения обновляет данные наценок в базе.
             SaveCommand = new RelayCommand(async param => await SaveBrandMarkupsAsync());
-            // Команда на загрузку данных
+            // Команда загрузки получает данные наценок из базы.
             LoadCommand = new RelayCommand(async param => await LoadBrandMarkupsAsync());
         }
 
         /// <summary>
-        /// Загружает наценки из базы данных и обновляет коллекцию.
+        /// Загружает наценки из базы данных и обновляет коллекцию BrandMarkups.
         /// </summary>
         public async Task LoadBrandMarkupsAsync()
         {
@@ -89,31 +103,31 @@ namespace DromHubSettings.ViewModels
             }
             catch (Exception ex)
             {
-                // Можно поднять событие об ошибке, если необходимо
+                // При возникновении ошибки уведомляем View через событие Fail.
                 Fail?.Invoke(this, ex.Message);
             }
         }
 
         /// <summary>
-        /// Сохраняет текущие наценки в базе данных.
+        /// Сохраняет текущие данные наценок в базе данных.
         /// </summary>
         public async Task SaveBrandMarkupsAsync()
         {
             try
             {
                 await DataService.SaveBrandMarkupsAsync(BrandMarkups);
-                // Если сохранение прошло успешно, поднимаем событие успеха
+                // Если сохранение прошло успешно, уведомляем View через событие Succeeded.
                 Succeeded?.Invoke(this, "Данные успешно обновлены");
             }
             catch (Exception ex)
             {
-                // При ошибке сохраняем сообщение и поднимаем событие ошибки
+                // При возникновении ошибки уведомляем View через событие Fail.
                 Fail?.Invoke(this, ex.Message);
             }
         }
 
         /// <summary>
-        /// Удаляет наценку и удаляет её из базы.
+        /// Удаляет выбранную наценку из коллекции и базы данных.
         /// </summary>
         private async Task DeleteBrandMarkupAsync(object parameter)
         {
@@ -123,7 +137,6 @@ namespace DromHubSettings.ViewModels
                 await DataService.DeleteBrandMarkupAsync(markup);
             }
         }
-
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
