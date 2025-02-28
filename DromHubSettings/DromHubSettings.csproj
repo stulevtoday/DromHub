@@ -14,7 +14,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Dialogs\AddLocalityDialog.xaml" />
-    <None Remove="Pages\ExportDefinitionPage.xaml" />
+    <None Remove="Dialogs\AddSupplierExcelMappingDialog.xaml" />
     <None Remove="Pages\LocalitiesPage.xaml" />
     <None Remove="Pages\MainPage.xaml" />
     <None Remove="Pages\SupplierMarkupsPage.xaml" />
@@ -49,12 +49,12 @@
     <PackageReference Include="Npgsql" Version="9.0.2" />
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Dialogs\AddExportColumnDialog.xaml">
+    <Page Update="Dialogs\AddSupplierExcelMappingDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Pages\ExportDefinitionPage.xaml">
+    <Page Update="Pages\ExcelMappingsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
@@ -74,7 +74,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Pages\SupplierLayoutPage.xaml">
+    <Page Update="Pages\SupplierExcelSettingsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="DromHubSettings.Pages.SupplierExcelSettingsPage"
+    x:Name="pageRoot"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:DromHubSettings.ViewModels"
+    xmlns:dialogs="using:DromHubSettings.Dialogs"
+    xmlns:models="using:DromHubSettings.Models"
+    xmlns:helpers="using:DromHubSettings.Helpers"
+    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">
+
+    <!-- Устанавливаем ViewModel страницы -->
+    <Page.DataContext>
+        <vm:SupplierExcelSettingViewModel/>
+    </Page.DataContext>
+
+    <!-- Ресурс для группировки сопоставлений по ключу (если потребуется для левой части) -->
+    <Page.Resources>
+        <CollectionViewSource x:Key="GroupedSupplierExcelSettings"
+                              Source="{Binding GroupedSupplierExcelSettings}"
+                              IsSourceGrouped="True"/>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- (0) Заголовок и описание страницы -->
+            <RowDefinition Height="Auto"/>
+            <!-- (1) Основное содержимое: список настроек и форма редактирования -->
+            <RowDefinition Height="*"/>
+            <!-- (2) Нижняя панель с кнопками действий -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- (0) Заголовок страницы и описание -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Поставщики > Разметка Excel файлов"
+                       Style="{StaticResource TitleTextBlockStyle}"
+                       Margin="36,24,36,0"/>
+            <TextBlock Text="Укажите номера столбцов для соответствующих полей. Если столбец 'Множество' отсутствует, оставьте поле равным 0"
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Margin="36,8,36,16"/>
+        </StackPanel>
+
+        <!-- (1) Основное содержимое -->
+        <Grid Grid.Row="1" Margin="36,0,36,24">
+            <Grid.ColumnDefinitions>
+                <!-- Левая колонка: список настроек (группировка может быть оставлена как есть) -->
+                <ColumnDefinition Width="0.5*"/>
+                <!-- Правая колонка: форма редактирования выбранных настроек -->
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Список настроек Excel разметки -->
+            <ListView Grid.Column="0"
+                      x:Name="SettingsListView"
+                      ItemsSource="{Binding Source={StaticResource GroupedSupplierExcelSettings}}"
+                      SelectedItem="{Binding SelectedSupplierExcelSetting, Mode=TwoWay}"
+                      SelectionMode="Single"
+                      Margin="0,0,16,0"
+                      BorderThickness="1"
+                      BorderBrush="Gray"
+                      CornerRadius="4">
+                <ListView.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Key}"
+                                           Style="{StaticResource TitleTextBlockStyle}"
+                                           AutomationProperties.AccessibilityView="Raw"/>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </ListView.GroupStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:SupplierExcelSetting">
+                        <!-- Предполагается, что у настроек есть отображаемое имя (например, SupplierName) -->
+                        <TextBlock Text="{x:Bind SupplierName}"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"
+                                   Margin="0,0,0,4"
+                                   HorizontalAlignment="Left"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!-- Форма редактирования выбранных настроек -->
+            <Grid Grid.Column="1"
+                  BorderThickness="1"
+                  BorderBrush="Gray"
+                  CornerRadius="4">
+                <Grid.RowDefinitions>
+                    <!-- (0) Заголовок формы редактирования -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- (1) Прокручиваемая область с полями редактирования -->
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Заголовок формы редактирования -->
+                <StackPanel Grid.Row="0" Margin="16,8,16,8">
+                    <TextBlock Text="Редактирование настроек импорта"
+                               Style="{StaticResource TitleTextBlockStyle}"
+                               Margin="0,0,0,8"/>
+                    <Border BorderBrush="LightGray"
+                            BorderThickness="0,1,0,0"
+                            Margin="0,0,0,4"/>
+                </StackPanel>
+
+                <!-- Прокручиваемая область с полями для редактирования -->
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel Margin="16,0,16,16">
+                        <!-- Редактирование поставщика (имя, только для чтения) -->
+                        <StackPanel Margin="0,0,0,16">
+                            <TextBlock Text="Поставщик"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Margin="0,0,0,8"/>
+                            <TextBox Text="{Binding SelectedSupplierExcelSetting.SupplierName, Mode=TwoWay}"
+                                     IsReadOnly="True"/>
+                        </StackPanel>
+
+                        <!-- Редактирование начальной строки импорта -->
+                        <StackPanel Margin="0,0,0,16">
+                            <TextBlock Text="Начальная строка"
+                                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                                       Margin="0,0,0,8"/>
+                            <TextBox Text="{Binding SelectedSupplierExcelSetting.InitialRow, Mode=TwoWay}"
+                                     InputScope="Number"/>
+                        </StackPanel>
+
+                        <!-- Секция сопоставлений столбцов -->
+                        <TextBlock Text="Сопоставления столбцов"
+                                   Style="{StaticResource TitleTextBlockStyle}"
+                                   Margin="0,0,0,8"/>
+
+                        <!-- Список сопоставлений -->
+                        <ItemsControl ItemsSource="{Binding SelectedSupplierExcelSetting.Mappings}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:SupplierExcelMapping">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <!-- Здесь можно использовать ComboBox для выбора свойства (если необходимо) -->
+                                        <TextBlock Text="{Binding ExcelMappingName}"
+                           Width="150"
+                           VerticalAlignment="Center"/>
+                                        <TextBox Text="{Binding ColumnIndex, Mode=TwoWay}"
+                         Width="50"
+                         Margin="8,0,0,0"
+                         InputScope="Number"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+
+                        <!-- Кнопка добавления нового сопоставления -->
+                        <Button Content="Добавить сопоставление"
+                                HorizontalAlignment="Left"
+                                Margin="0,16,0,0"
+                                Click="AddMappingButton_Click"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- (2) Нижняя панель с кнопкой сохранения изменений -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,16,16"
+                    Spacing="12">
+            <Button Content="Сохранить изменения" Click="SaveButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Page>

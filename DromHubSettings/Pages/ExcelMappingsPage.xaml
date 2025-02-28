@@ -1,0 +1,71 @@
+<Page
+    x:Class="DromHubSettings.Pages.ExcelMappingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:DromHubSettings.ViewModels"
+    xmlns:dialogs="using:DromHubSettings.Dialogs"
+    xmlns:models="using:DromHubSettings.Models"
+    xmlns:helpers="using:DromHubSettings.Helpers"
+    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">
+
+    <Page.DataContext>
+        <vm:ExcelMappingViewModel/>
+    </Page.DataContext>
+
+    <Page.Resources>
+        <!-- Источник данных -->
+        <CollectionViewSource x:Key="ExcelMappings"
+                              Source="{Binding ExcelMappings}"/>
+
+        <!-- Определяем DataTemplate в ресурсах страницы -->
+        <DataTemplate x:Key="TextTemplate" x:DataType="models:ExcelMapping">
+            <Border CornerRadius="4"
+            BorderThickness="2"
+            BorderBrush="DarkGray"
+            Padding="8"
+            Margin="10"
+            Width="250"
+            Height="120">
+                <StackPanel Orientation="Vertical"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource TitleTextBlockStyle}"
+                       Text="{x:Bind Name}"
+                       TextAlignment="Center"/>
+                    <TextBlock Style="{StaticResource BodyTextBlockStyle}"
+                       Margin="0,4,0,0"
+                       Text="{x:Bind Property}"
+                       TextAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+
+
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок страницы и описание -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Поставщики"
+                       Margin="36,32,36,16"
+                       Style="{StaticResource TitleTextBlockStyle}"/>
+            <TextBlock Text="Управляйте данными поставщиков. Выберите поставщика из списка слева для редактирования или удаления его данных. Используйте форму справа для внесения изменений."
+                       Margin="36,0,36,20"
+                       Style="{ThemeResource BodyTextBlockStyle}"/>
+        </StackPanel>
+
+        <!-- GridView с использованием ItemTemplate из ресурсов -->
+        <GridView Grid.Row="1"
+                  Margin="36,0,36,24"
+                  ItemsSource="{Binding Source={StaticResource ExcelLayouts}}"
+                  ItemTemplate="{StaticResource TextTemplate}"
+                  SelectionMode="None"
+                  HorizontalAlignment="Center"/>
+    </Grid>
+</Page>

@@ -11,15 +11,15 @@ using DromHubSettings.Dialogs;
 
 namespace DromHubSettings.Pages
 {
-    public sealed partial class SupplierLayoutPage : Page
+    public sealed partial class SupplierExcelSettingsPage : Page
     {
-        public SupplierLayoutPage()
+        public SupplierExcelSettingsPage()
         {
             this.InitializeComponent();
-            this.Loaded += SupplierLayoutPage_Loaded;
+            this.Loaded += SupplierExcelSettingsPage_Loaded;
 
             // Подписка на события успешного выполнения и ошибки для отображения уведомлений пользователю.
-            if (this.DataContext is SupplierLayoutViewModel vm)
+            if (this.DataContext is SupplierExcelSettingViewModel vm)
             {
                 vm.Succeeded += Vm_Succeeded;
                 vm.Fail += Vm_Fail;
@@ -29,11 +29,11 @@ namespace DromHubSettings.Pages
         /// <summary>
         /// Обработчик загрузки страницы. Загружает данные поставщиков из базы.
         /// </summary>
-        private async void SupplierLayoutPage_Loaded(object sender, RoutedEventArgs e)
+        private async void SupplierExcelSettingsPage_Loaded(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is SupplierLayoutViewModel vm)
+            if (this.DataContext is SupplierExcelSettingViewModel vm)
             {
-                await vm.LoadSupplierLayoutsAsync();
+                await vm.ReadSupplierExcelSettingsAsync();
             }
         }
 
@@ -66,6 +66,27 @@ namespace DromHubSettings.Pages
             };
             await errorDialog.ShowAsync();
         }
+        private async void AddMappingButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new AddSupplierExcelMappingDialog();
+            dialog.XamlRoot = this.XamlRoot;
+            var result = await dialog.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                if (this.DataContext is SupplierExcelSettingViewModel vm)
+                {
+                    var newSupplierExcelMapping = new SupplierExcelMapping
+                    {
+                        SupplierExcelSettingsId = vm.SelectedSupplierExcelSetting.Id,
+                        ExcelMappingId = dialog.ExcelMappingId,
+                        ColumnIndex = dialog.ColumnIndex
+                    };
+                    vm.SelectedSupplierExcelSetting.Mappings.Add(newSupplierExcelMapping);
+                    await DataService.CreateSupplierExcelMappingAsync(newSupplierExcelMapping);
+                }
+            }
+        }
 
         /// <summary>
         /// Обработчик кнопки "Сохранить изменения".
@@ -73,10 +94,10 @@ namespace DromHubSettings.Pages
         /// </summary>
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (this.DataContext is SupplierLayoutViewModel vm)
+            if (this.DataContext is SupplierExcelSettingViewModel vm)
             {
-                await vm.SaveSupplierLayoutsAsync();
-                await vm.LoadSupplierLayoutsAsync();
+                await vm.UpdateSupplierExcelSettingsAsync();
+                await vm.ReadSupplierExcelSettingsAsync();
             }
         }
     }

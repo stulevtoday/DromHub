@@ -239,8 +239,8 @@ namespace DromHubSettings.Serviсes
             {
                 // 1. Добавляем запись в suppliers
                 var sqlSupplier = @"
-                    INSERT INTO suppliers (id, name, email, locality_id, index, is_active)
-                    VALUES (@id, @name, @email, @localityId, @index, @isActive)";
+            INSERT INTO suppliers (id, name, email, locality_id, index, is_active)
+            VALUES (@id, @name, @email, @localityId, @index, @isActive)";
                 using (var command = new NpgsqlCommand(sqlSupplier, connection, transaction))
                 {
                     command.Parameters.AddWithValue("id", supplier.Id);
@@ -254,8 +254,8 @@ namespace DromHubSettings.Serviсes
 
                 // 2. Создаём запись в supplier_markups (без имени)
                 var sqlMarkup = @"
-                    INSERT INTO supplier_markups (supplier_id, markup)
-                    VALUES (@supplierId, @markup)";
+            INSERT INTO supplier_markups (supplier_id, markup)
+            VALUES (@supplierId, @markup)";
                 using (var cmdMarkup = new NpgsqlCommand(sqlMarkup, connection, transaction))
                 {
                     cmdMarkup.Parameters.AddWithValue("supplierId", supplier.Id);
@@ -263,22 +263,18 @@ namespace DromHubSettings.Serviсes
                     await cmdMarkup.ExecuteNonQueryAsync();
                 }
 
-                // 3. Вставляем запись разметки для поставщика
-                var sqlMapping = @"
-                    INSERT INTO supplier_excel_mappings (supplier_id, column_product_name, column_brand, column_catalog_name, column_quantity, column_price, column_multiple)
-                    VALUES (@supplierId, @columnProductName, @columnBrand, @columnCatalogName, @columnQuantity, @columnPrice, @columnMultiple)";
-                using (var cmdMapping = new NpgsqlCommand(sqlMapping, connection, transaction))
+                // 3. Вместо старой таблицы (supplier_excel_mappings) создаём запись в supplier_excel_settings
+                var settingId = Guid.NewGuid();
+                var sqlSetting = @"
+            INSERT INTO supplier_excel_settings (id, supplier_id, initial_row)
+            VALUES (@id, @supplierId, @initialRow)";
+                using (var cmdSetting = new NpgsqlCommand(sqlSetting, connection, transaction))
                 {
-                    cmdMapping.Parameters.AddWithValue("supplierId", supplier.Id);
-                    cmdMapping.Parameters.AddWithValue("columnProductName", 1);
-                    cmdMapping.Parameters.AddWithValue("columnBrand", 2);
-                    cmdMapping.Parameters.AddWithValue("columnCatalogName", 3);
-                    cmdMapping.Parameters.AddWithValue("columnQuantity", 4);
-                    cmdMapping.Parameters.AddWithValue("columnPrice", 5);
-                    cmdMapping.Parameters.AddWithValue("columnMultiple", 0);
-                    await cmdMapping.ExecuteNonQueryAsync();
+                    cmdSetting.Parameters.AddWithValue("id", settingId);
+                    cmdSetting.Parameters.AddWithValue("supplierId", supplier.Id);
+                    cmdSetting.Parameters.AddWithValue("initialRow", 2); // Например, по умолчанию начинаем со 2-й строки
+                    await cmdSetting.ExecuteNonQueryAsync();
                 }
-
                 await transaction.CommitAsync();
             }
             catch
@@ -287,6 +283,7 @@ namespace DromHubSettings.Serviсes
                 throw;
             }
         }
+
 
 
         public static async Task SaveSuppliersAsync(IEnumerable<Supplier> suppliers)
@@ -449,81 +446,6 @@ namespace DromHubSettings.Serviсes
             await transaction.CommitAsync();
         }
 
-
-        public static async Task<List<SupplierLayout>> LoadSupplierLayoutsAsync()
-        {
-            var list = new List<SupplierLayout>();
-
-            using var connection = new NpgsqlConnection(ConnectionString);
-            await connection.OpenAsync();
-
-            var sql = @"
-                SELECT 
-                    sem.supplier_id,
-                    sem.column_product_name,
-                    sem.column_brand,
-                    sem.column_catalog_name,
-                    sem.column_quantity,
-                    sem.column_price,
-                    sem.column_multiple,
-                    s.name AS supplier_name
-                FROM supplier_excel_mappings sem
-                JOIN suppliers s ON sem.supplier_id = s.id";
-
-            using var command = new NpgsqlCommand(sql, connection);
-            using var reader = await command.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
-            {
-                list.Add(new SupplierLayout
-                {
-                    SupplierId = reader.GetGuid(reader.GetOrdinal("supplier_id")),
-                    ColumnProductName = reader.GetInt32(reader.GetOrdinal("column_product_name")),
-                    ColumnBrand = reader.GetInt32(reader.GetOrdinal("column_brand")),
-                    ColumnCatalogName = reader.GetInt32(reader.GetOrdinal("column_catalog_name")),
-                    ColumnQuantity = reader.GetInt32(reader.GetOrdinal("column_quantity")),
-                    ColumnPrice = reader.GetInt32(reader.GetOrdinal("column_price")),
-                    ColumnMultiple = reader.GetInt32(reader.GetOrdinal("column_multiple")),
-                    SupplierName = reader.GetString(reader.GetOrdinal("supplier_name"))
-                });
-            }
-
-            return list;
-        }
-
-
-        public static async Task SaveSupplierLayoutsAsync(IEnumerable<SupplierLayout> mappings)
-        {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            await connection.OpenAsync();
-            using var transaction = await connection.BeginTransactionAsync();
-
-            var sql = @"
-                UPDATE supplier_excel_mappings 
-                SET column_product_name = @columnProductName,
-                    column_brand = @columnBrand,
-                    column_catalog_name = @columnCatalogName,
-                    column_quantity = @columnQuantity,
-                    column_price = @columnPrice,
-                    column_multiple = @columnMultiple
-                WHERE supplier_id = @supplierId";
-
-            foreach (var mapping in mappings)
-            {
-                using var command = new NpgsqlCommand(sql, connection, transaction);
-                command.Parameters.AddWithValue("columnProductName", mapping.ColumnProductName);
-                command.Parameters.AddWithValue("columnBrand", mapping.ColumnBrand);
-                command.Parameters.AddWithValue("columnCatalogName", mapping.ColumnCatalogName); // либо "column_catalog_name"
-                command.Parameters.AddWithValue("columnQuantity", mapping.ColumnQuantity);
-                command.Parameters.AddWithValue("columnPrice", mapping.ColumnPrice);
-                command.Parameters.AddWithValue("columnMultiple", mapping.ColumnMultiple); // всегда передаем число (0, если не задано)
-                command.Parameters.AddWithValue("supplierId", mapping.SupplierId);
-                await command.ExecuteNonQueryAsync();
-            }
-
-            await transaction.CommitAsync();
-        }
-
         // Получение списка локальностей
         public static async Task<List<Locality>> LoadLocalitiesAsync()
         {
@@ -653,184 +575,208 @@ namespace DromHubSettings.Serviсes
             await cmdUpdate.ExecuteNonQueryAsync();
         }
 
-        #region ExportLayout (Добавить, Обновить, Удалить, Загрузить)
-
-        /// <summary>
-        /// Добавить новую запись в export_layout.
-        /// </summary>
-        public static async Task AddExportLayoutAsync(ExportLayout layout)
+        public static async Task<List<ExcelMapping>> ReadExcelMappingsAsync()
         {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            await connection.OpenAsync();
-
-            var sql = "INSERT INTO export_layout (id, start_row) VALUES (@id, @startRow)";
-            using var cmd = new NpgsqlCommand(sql, connection);
-            cmd.Parameters.AddWithValue("id", layout.Id);
-            cmd.Parameters.AddWithValue("startRow", layout.StartRow);
-            await cmd.ExecuteNonQueryAsync();
-        }
-
-        /// <summary>
-        /// Обновить запись в export_layout по Id.
-        /// </summary>
-        public static async Task SaveExportLayoutAsync(ExportLayout layout)
-        {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            await connection.OpenAsync();
-
-            var sql = "UPDATE export_layout SET start_row = @startRow WHERE id = @id";
-            using var cmd = new NpgsqlCommand(sql, connection);
-            cmd.Parameters.AddWithValue("id", layout.Id);
-            cmd.Parameters.AddWithValue("startRow", layout.StartRow);
-            await cmd.ExecuteNonQueryAsync();
-        }
-
-        /// <summary>
-        /// Удалить запись из export_layout (и каскадно столбцы, если ON DELETE CASCADE).
-        /// </summary>
-        public static async Task DeleteExportLayoutAsync(ExportLayout layout)
-        {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            await connection.OpenAsync();
-
-            var sql = "DELETE FROM export_layout WHERE id = @id";
-            using var cmd = new NpgsqlCommand(sql, connection);
-            cmd.Parameters.AddWithValue("id", layout.Id);
-            await cmd.ExecuteNonQueryAsync();
-        }
-
-        /// <summary>
-        /// Загрузить ExportLayout (и связанные столбцы) из БД (пример из вашего кода).
-        /// </summary>
-        public static async Task<ExportLayout> LoadExportLayoutAsync()
-        {
-            ExportLayout layout = null;
+            var excelMappings = new List<ExcelMapping>();
 
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
 
-            // Предположим, у нас одна запись в export_layout
-            var sqlLayout = "SELECT id, start_row FROM export_layout LIMIT 1;";
-            using var cmdLayout = new NpgsqlCommand(sqlLayout, connection);
-            using var readerLayout = await cmdLayout.ExecuteReaderAsync();
-            if (await readerLayout.ReadAsync())
+            var sql = "SELECT id, name, property FROM excel_mappings";
+            using var command = new NpgsqlCommand(sql, connection);
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
             {
-                layout = new ExportLayout
+                var id = reader.GetGuid(reader.GetOrdinal("id"));
+                var name = reader.GetString(reader.GetOrdinal("name"));
+                var property = reader.GetString(reader.GetOrdinal("property"));
+
+                excelMappings.Add(new ExcelMapping
                 {
-                    Id = readerLayout.GetGuid(0),
-                    StartRow = readerLayout.GetInt32(1)
-                };
+                    Id = id,
+                    Name = name,
+                    Property = property
+                });
             }
-            readerLayout.Close();
 
-            if (layout != null)
+            return excelMappings;
+        }
+        public static async Task CreateSupplierExcelMappingAsync(SupplierExcelMapping mapping)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            // Можно обернуть в транзакцию, если необходимо
+            var sql = @"
+        INSERT INTO supplier_excel_mappings (id, supplier_setting_id, excel_mapping_id, column_index)
+        VALUES (@id, @supplierSetting, @excelMappingId, @columnIndex)";
+
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("id", mapping.Id == Guid.Empty ? Guid.NewGuid() : mapping.Id);
+            command.Parameters.AddWithValue("supplierSetting", mapping.SupplierExcelSettingsId);
+            command.Parameters.AddWithValue("excelMappingId", mapping.ExcelMappingId);
+            command.Parameters.AddWithValue("columnIndex", mapping.ColumnIndex);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public static async Task<List<SupplierExcelSetting>> ReadSupplierExcelSettingsAsync()
+        {
+            var result = new List<SupplierExcelSetting>();
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            await connection.OpenAsync();
+
+            // 1) Считываем все настройки вместе с именем поставщика (JOIN)
+            var sqlSettings = @"
+SELECT ses.id, 
+       ses.supplier_id, 
+       ses.initial_row, 
+       s.name AS supplier_name
+FROM supplier_excel_settings ses
+JOIN suppliers s ON ses.supplier_id = s.id";
+
+            using var cmdSettings = new NpgsqlCommand(sqlSettings, connection);
+            using var readerSettings = await cmdSettings.ExecuteReaderAsync();
+            while (await readerSettings.ReadAsync())
             {
-                // Загружаем столбцы
-                var sqlColumns = @"
-                    SELECT id, export_layout_id, column_name, column_index, is_visible, mapping_property
-                    FROM export_column_definitions
-                    WHERE export_layout_id = @layoutId;";
-                using var cmdColumns = new NpgsqlCommand(sqlColumns, connection);
-                cmdColumns.Parameters.AddWithValue("layoutId", layout.Id);
-
-                using var readerCols = await cmdColumns.ExecuteReaderAsync();
-                while (await readerCols.ReadAsync())
+                var setting = new SupplierExcelSetting
                 {
-                    var col = new ExportColumnDefinition
+                    Id = readerSettings.GetGuid(0),
+                    SupplierId = readerSettings.GetGuid(1),
+                    InitialRow = readerSettings.GetInt32(2),
+                    SupplierName = readerSettings.GetString(3), // получаем имя поставщика
+                    Mappings = new List<SupplierExcelMapping>()
+                };
+                result.Add(setting);
+            }
+            readerSettings.Close();
+
+            // 2) Считываем все маппинги с JOIN'ом для получения ExcelMappingName
+            var dictMappings = new Dictionary<Guid, List<SupplierExcelMapping>>();
+            var sqlMappings = @"
+SELECT sem.id, 
+       sem.supplier_setting_id, 
+       sem.excel_mapping_id, 
+       sem.column_index,
+       em.name AS excel_mapping_name
+FROM supplier_excel_mappings sem
+JOIN excel_mappings em ON sem.excel_mapping_id = em.id";
+
+            using var cmdMappings = new NpgsqlCommand(sqlMappings, connection);
+            using var readerMappings = await cmdMappings.ExecuteReaderAsync();
+            while (await readerMappings.ReadAsync())
+            {
+                var mapping = new SupplierExcelMapping
+                {
+                    Id = readerMappings.GetGuid(0),
+                    SupplierExcelSettingsId = readerMappings.GetGuid(1),
+                    ExcelMappingId = readerMappings.GetGuid(2),
+                    ColumnIndex = readerMappings.GetInt32(3),
+                    ExcelMappingName = readerMappings.GetString(4)
+                };
+
+                if (!dictMappings.ContainsKey(mapping.SupplierExcelSettingsId))
+                    dictMappings[mapping.SupplierExcelSettingsId] = new List<SupplierExcelMapping>();
+
+                dictMappings[mapping.SupplierExcelSettingsId].Add(mapping);
+            }
+            readerMappings.Close();
+
+            // 3) Присоединяем маппинги к соответствующим настройкам
+            foreach (var setting in result)
+            {
+                if (dictMappings.TryGetValue(setting.Id, out var listOfMappings))
+                {
+                    foreach (var m in listOfMappings)
                     {
-                        Id = readerCols.GetGuid(0),
-                        ExportLayoutId = readerCols.GetGuid(1),
-                        ColumnName = readerCols.GetString(2),
-                        ColumnIndex = readerCols.GetInt32(3),
-                        IsVisible = readerCols.GetBoolean(4),
-                        MappingProperty = readerCols.GetString(5)
-                    };
-                    layout.Columns.Add(col);
+                        setting.Mappings.Add(m);
+                    }
                 }
             }
 
-            return layout;
+            return result;
         }
 
-        #endregion
 
-        #region ExportColumnDefinition (Добавить, Обновить, Удалить)
 
-        /// <summary>
-        /// Добавить новый столбец (ExportColumnDefinition).
-        /// </summary>
-        public static async Task AddExportColumnDefinitionAsync(ExportColumnDefinition col)
+        public static async Task UpdateSupplierExcelSettingsAsync(IEnumerable<SupplierExcelSetting> settings)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
-
-            var sql = @"
-                INSERT INTO export_column_definitions
-                (id, export_layout_id, column_name, column_index, is_visible, mapping_property)
-                VALUES (@id, @layoutId, @name, @index, @visible, @mapping);
-            ";
-
-            using var cmd = new NpgsqlCommand(sql, connection);
-            cmd.Parameters.AddWithValue("id", col.Id);
-            cmd.Parameters.AddWithValue("layoutId", col.ExportLayoutId);
-            cmd.Parameters.AddWithValue("name", col.ColumnName ?? "");
-            cmd.Parameters.AddWithValue("index", col.ColumnIndex);
-            cmd.Parameters.AddWithValue("visible", col.IsVisible);
-            cmd.Parameters.AddWithValue("mapping", col.MappingProperty ?? "");
-            await cmd.ExecuteNonQueryAsync();
-        }
-
-        /// <summary>
-        /// Сохранить (обновить) все переданные столбцы ExportColumnDefinition в базе.
-        /// Аналогично тому, как сделано для брендов и диапазонов.
-        /// </summary>
-        public static async Task SaveExportColumnDefinitionsAsync(IEnumerable<ExportColumnDefinition> columns)
-        {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            await connection.OpenAsync();
-
-            // Начинаем транзакцию, чтобы все обновления были атомарны
             using var transaction = await connection.BeginTransactionAsync();
 
-            var sql = @"
-        UPDATE export_column_definitions
-        SET column_name = @name,
-            column_index = @index,
-            is_visible = @visible,
-            mapping_property = @mapping
-        WHERE id = @id
-    ";
-
-            // Для каждого столбца выполняем UPDATE
-            foreach (var col in columns)
+            try
             {
-                using var cmd = new NpgsqlCommand(sql, connection, transaction);
-                cmd.Parameters.AddWithValue("id", col.Id);
-                cmd.Parameters.AddWithValue("name", col.ColumnName ?? "");
-                cmd.Parameters.AddWithValue("index", col.ColumnIndex);
-                cmd.Parameters.AddWithValue("visible", col.IsVisible);
-                cmd.Parameters.AddWithValue("mapping", col.MappingProperty ?? "");
-                await cmd.ExecuteNonQueryAsync();
+                foreach (var setting in settings)
+                {
+                    // 1) Проверяем, есть ли запись в supplier_excel_settings
+                    var checkSql = "SELECT COUNT(*) FROM supplier_excel_settings WHERE id = @id";
+                    using var checkCmd = new NpgsqlCommand(checkSql, connection, transaction);
+                    checkCmd.Parameters.AddWithValue("id", setting.Id);
+                    var count = (long)await checkCmd.ExecuteScalarAsync();
+
+                    if (count == 0)
+                    {
+                        // Вставляем новую запись
+                        var insertSql = @"
+                    INSERT INTO supplier_excel_settings (id, supplier_id, initial_row)
+                    VALUES (@id, @supplierId, @initialRow)";
+                        using var insertCmd = new NpgsqlCommand(insertSql, connection, transaction);
+                        insertCmd.Parameters.AddWithValue("id", setting.Id);
+                        insertCmd.Parameters.AddWithValue("supplierId", setting.SupplierId);
+                        insertCmd.Parameters.AddWithValue("initialRow", setting.InitialRow);
+                        await insertCmd.ExecuteNonQueryAsync();
+                    }
+                    else
+                    {
+                        // Обновляем существующую
+                        var updateSql = @"
+                    UPDATE supplier_excel_settings
+                    SET supplier_id = @supplierId,
+                        initial_row = @initialRow
+                    WHERE id = @id";
+                        using var updateCmd = new NpgsqlCommand(updateSql, connection, transaction);
+                        updateCmd.Parameters.AddWithValue("id", setting.Id);
+                        updateCmd.Parameters.AddWithValue("supplierId", setting.SupplierId);
+                        updateCmd.Parameters.AddWithValue("initialRow", setting.InitialRow);
+                        await updateCmd.ExecuteNonQueryAsync();
+                    }
+
+                    // 2) Удаляем старые маппинги для данной настройки
+                    var deleteMappingsSql = "DELETE FROM supplier_excel_mappings WHERE supplier_setting_id = @settingId";
+                    using var delCmd = new NpgsqlCommand(deleteMappingsSql, connection, transaction);
+                    delCmd.Parameters.AddWithValue("settingId", setting.Id);
+                    await delCmd.ExecuteNonQueryAsync();
+
+                    // 3) Вставляем актуальные маппинги заново
+                    if (setting.Mappings != null)
+                    {
+                        foreach (var mapping in setting.Mappings)
+                        {
+                            var insertMappingSql = @"
+                        INSERT INTO supplier_excel_mappings (id, supplier_setting_id, excel_mapping_id, column_index)
+                        VALUES (@id, @settingId, @excelMappingId, @columnIndex)";
+
+                            using var insMapCmd = new NpgsqlCommand(insertMappingSql, connection, transaction);
+                            insMapCmd.Parameters.AddWithValue("id", mapping.Id == Guid.Empty ? Guid.NewGuid() : mapping.Id);
+                            insMapCmd.Parameters.AddWithValue("settingId", setting.Id);
+                            insMapCmd.Parameters.AddWithValue("excelMappingId", mapping.ExcelMappingId); // или PropertyId
+                            insMapCmd.Parameters.AddWithValue("columnIndex", mapping.ColumnIndex);
+                            await insMapCmd.ExecuteNonQueryAsync();
+                        }
+                    }
+                }
+
+                await transaction.CommitAsync();
             }
-
-            // Фиксируем все изменения
-            await transaction.CommitAsync();
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
-        /// <summary>
-        /// Удалить столбец (ExportColumnDefinition) из БД.
-        /// </summary>
-        public static async Task DeleteExportColumnDefinitionAsync(ExportColumnDefinition col)
-        {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            await connection.OpenAsync();
-
-            var sql = "DELETE FROM export_column_definitions WHERE id = @id";
-            using var cmd = new NpgsqlCommand(sql, connection);
-            cmd.Parameters.AddWithValue("id", col.Id);
-            await cmd.ExecuteNonQueryAsync();
-        }
-
-        #endregion
     }
 }

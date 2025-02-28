@@ -20,7 +20,7 @@
 				</NavigationViewItem.MenuItems>
 			</NavigationViewItem>
             <NavigationViewItem Content="Поставщики" Icon="People" Tag="SuppliersPage"/>
-            <NavigationViewItem Content="Разметка" Icon="People" Tag="SupplierExcelMappingsPage"/>
+            <NavigationViewItem Content="Разметка" Icon="People" Tag="SupplierExcelSettingsPage"/>
             <NavigationViewItem Content="Локальности" Icon="People" Tag="LocalitiesPage"/>
 			<NavigationViewItem Content="Почта" Icon="Mail" Tag="SamplePage4">
 				<NavigationViewItem.MenuItems>
@@ -28,7 +28,7 @@
                     <NavigationViewItem Content="Calendar" Tag="ExportLayoutPage"/>
 				</NavigationViewItem.MenuItems>
 			</NavigationViewItem>
-            <NavigationViewItem Content="Парсер" Icon="Globe" Tag="ExportDefinitionPage">
+            <NavigationViewItem Content="Парсер" Icon="Globe" Tag="ExcelLayoutsPage">
 				<NavigationViewItem.MenuItems>
 					<NavigationViewItem Content="Mail" Tag="SamplePage3"/>
 					<NavigationViewItem Content="Calendar" Tag="SamplePage4"/>

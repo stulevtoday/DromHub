@@ -7,7 +7,7 @@
     xmlns:vm="using:DromHubSettings.ViewModels"
     xmlns:dialogs="using:DromHubSettings.Dialogs"
     xmlns:models="using:DromHubSettings.Models"
-    xmlns:helpers="using:DromHubSettings.Helpers"
+    xmlns:converters="using:DromHubSettings.Converters"
     Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}">
 
     <!-- Устанавливаем DataContext страницы как BrandMarkupViewModel -->
@@ -17,7 +17,7 @@
 
     <Page.Resources>
         <!-- Конвертер для преобразования текста в верхний регистр -->
-        <helpers:UpperCaseConverter x:Key="UpperCaseConverter"/>
+        <converters:UpperCaseConverter x:Key="UpperCaseConverter"/>
         <!-- Ресурс для группировки наценок по брендам -->
         <CollectionViewSource x:Key="GroupedBrandMarkups"
                               Source="{Binding GroupedBrandMarkups}"
